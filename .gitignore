@@ -1,0 +1,20 @@
+# Private research evidence and vendor documents remain local.
+/FINDINGS.md
+/BOARD-NOTES.md
+/batch-*-scans.json
+/manifest.csv
+/images/
+/device/
+/mitm/
+/reference/
+/exports/
+.env
+.env.*
+*.cookie
+*.cookies
+*.mitm
+*.pcap
+*.pcapng
+*.log
+.DS_Store
+__pycache__/
