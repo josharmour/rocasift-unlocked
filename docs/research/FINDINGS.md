@@ -1,0 +1,131 @@
+> Public copy of the original local findings, with owner/device identifiers removed and selected overstatements corrected. Captures and vendor PDFs referenced below are retained locally, not included here. These are research observations, not an independently validated API specification. See [current device findings](../device-findings.md) for proxy cleanup and later observations.
+
+# Roca Sifter — Recon Findings
+Collected 2026-10-24 by Hermes (session: roca firmware/RE investigation).
+Observations are marked [O]; inferences are marked [I].
+
+## 1. What the device is
+
+| Field | Value | Source |
+|---|---|---|
+| Product | Roca Sifter (TCGplayer card sifter) | [O] |
+| Maker | Roca Robotics Inc. (TCGplayer/Lexmark subsidiary) | [O] T&C pdf |
+| Platform | Lexmark **Optra Compute 550** white-label | [O] device serves /device-models/compute550.png; cert O=Lexmark |
+| CPU / RAM / storage | Quad-core ARM v8 / 2GB / 16GB eMMC | [O] optra-spec-sheet.pdf |
+| OS | Poky Linux (Yocto), secure boot, Azure IoT Edge runtime, Docker "skills" | [O] spec sheet |
+| Serial | <DEVICE_SERIAL> | [O] cloud + device |
+| Azure identity | thingName sifter-<DEVICE_SERIAL>, DPS scope <DPS_SCOPE> | [O] |
+| Build target | granite2v8-sifter (OEM_ID 2, Family Roca, Series TCGPlayer) | [O] device settings API |
+| **Firmware** | **3.5.4** | [O] device settings API |
+
+## 2. Network presence (Owner's LAN)
+
+- Wired: **<DEVICE_LAN_IP>** (MAC <DEVICE_MAC>, Lexmark OUI; mDNS `optra-<DEVICE_SERIAL>`)
+- Wireless: **<DEVICE_LAN_IP>** (MAC <DEVICE_MAC>)
+- Both serve the same EWS on :443 — "TCGplayer Device Setup" (Vite SPA),
+  self-signed cert CN=optra-<DEVICE_SERIAL>. Server banner: `webserver`.
+- Setup-mode AP portal mirrors EWS at http://172.16.131.2/setup (advanced
+  network config at http://172.16.131.2). [O] Roca setup docs
+- Rate limiter: ~8 rapid requests -> 429. Space probes 3-5s. [O]
+
+## 3. Local EWS API (authenticated)
+
+Auth: `Authorization: Basic base64("optra:" + devicePassword)`.
+`POST /login {password}` only validates (200 {} = correct). No cookie/session.
+
+Endpoints (enumerated from SPA bundle index-COcuR-dg.js):
+```
+POST /login {password}
+GET  /webservices/settings/<key[,key...]>     PUT /webservices/settings/
+GET  /webservices/logs                        (~10MB PKCS#7 envelopedData,
+                                               sealed to Lexmark support cert
+                                               padebug.lpdev.prtdev.lexmark.com
+                                               - NOT readable locally)
+GET  /webservices/diagnostics/screenshot      (500: no display attached)
+GET  /webservices/diagnostics/external/urls
+GET/PUT/DELETE /webservices/proxy             POST /webservices/proxy/test
+POST /webservices/password {password}
+GET  /webservices/wireless/{interface,networks,psk}
+```
+Settings keys observed in bundle: BuildTarget, FamilyName, FirmwareVersion,
+ModelName, OEM_ID, ScopeId, SerialNumber, SeriesName, LastTimeSync, HDMI_Jack,
+Wired_/Wireless_IPv4_*, ethaddr, wlanaddr, Manual_DNS/NTP_*, ConnectedToHub.
+Unknown /webservices/* paths fall through to the SPA (no hidden endpoints). [O]
+Endpoint surface does NOT change during a running job (verified mid-job). [O]
+
+## 4. Cloud side (ql-api.tcgplayer.com, seller session cookies)
+
+Auth via lifted browser cookies (chrome-faithful); CORS blocks page-JS fetches
+of images but local curl with cookies works fine.
+
+```
+GET  /batch/<id>                              counts + config
+POST /search/batch/<id>/matched-items   {page,pageSize}
+POST /search/batch/<id>/unidentified-items    same shape
+GET  /sifters/seller                          all devices + state
+GET  /sifters/<deviceId>                      single device detail
+GET  /jobs/<jobId>                            job config + progress
+GET  /images/<batchId>/<batchItemId>/thumb.jpg   446x600 JPEG, observed rendition
+                                                  (full/original/large probes failed)
+```
+No directory listing anywhere; batchItemIds are non-sequential.
+NO remote device-log/diagnostics endpoints on ql-api (404s). [O]
+
+## 5. Data harvested -> this folder
+
+- `batch-<BATCH_ID>-scans.json` — full scan list snapshot (501 items) + batch meta
+- `manifest.csv` — 501 rows: name/set/number/condition/printing/language/
+  confidence/pricing/marketPrice/bin/imageUrl per scan
+- `images/` — 501 scan JPEGs (48MB), all verified valid 446x600
+- Batch <BATCH_ID> ("<BATCH_NAME>"): $71.45 total pricing, matched entries reported confidence=Good,
+  Aether Revolt, 0 duplicates
+- Second job batch **<SECOND_BATCH_ID>** observed live (foil sift); not harvested yet
+
+## 6. Vendor infrastructure map
+
+| Endpoint | Purpose | Access |
+|---|---|---|
+| portal.optra.com | Lexmark Optra Portal (device mgmt) | auth required; GraphQL API host injected post-login; CF blocks anon POST |
+| optra-release.azure-devices.net | Azure IoT Hub | device-only |
+| global.azure-devices-provisioning.net | Azure DPS | device-only |
+| optrarelease.azurecr.io | Azure Container Registry (skill images) | anon pull DISABLED (401 even per-repo) |
+| bucket.optra.com | S3: **firmware downloads on update** [O user guide] | listing 403; object ACLs unknown |
+| logsene-journald-receiver.sematext.com | app log upload / remote diagnostics | device-only |
+| mcr.microsoft.com + *.blob.core.windows.net | IoT Edge base images + ACR image deltas | public |
+
+## 7. Firmware availability
+
+- No public firmware download was found in this investigation.
+  Firmware is portal-managed OTA; delivered from bucket.optra.com on update,
+  skill containers from optrarelease.azurecr.io. [O docs + user guide]
+- "granite2v8" build target: zero public hits.
+- LexmarkVentures GitHub has only skill SDK examples, no device firmware.
+- Community RE of the Sifter: none found (hardware shipped Sept 2026).
+
+## 8. MITM capture experiment (2026-10-24) — tested, NOT viable for jobs
+
+- Device honors `PUT /webservices/proxy` (port must be a STRING). Intercept
+  mode rejected (`tlsv1 unknown ca` — test CA not trusted);
+  pass-through mode (`--ignore-hosts '.*'`) tunnels fine.
+- Applying the proxy bounces the device (~1min EWS + cloud outage, self-recovers).
+- Even sequenced correctly (proxy → stable → job start), the job died ~2min in
+  (white flashing light, 0 cards). The reason for the job failure was not isolated.
+- Yield: new hosts `secretsmanager.us-east-1.amazonaws.com` (device pulls
+  runtime secrets — likely ACR creds/job tokens) and `apis.us.iss.lexmark.com`.
+- Logs in `mitm/`.
+
+## 9. Routes to firmware bits (remaining)
+
+1. **Physical** — UART pads / eMMC dump on the Compute 550 board; read access and secure-boot behavior remain unverified on this board.
+2. **Ask** — Roca support (support@rocarobotics.com) or Lexmark Optra support
+   (optra.techsupport@lexmark.com) for a firmware image.
+
+Note: Roca T&C contains a software reverse-engineering restriction clause.
+
+## 10. Reference files
+
+- `reference/optra-compute-ug.pdf` — Optra Compute user guide (endpoint table,
+  button/light behaviors incl "Pulling firmware" LED state)
+- `reference/optra-ug.pdf` — generic Optra device user guide
+- `device/identity.json`, `device/external-urls.json`,
+  `device/external-urls-during-job.json`, `device/device-logs.bin` (encrypted)

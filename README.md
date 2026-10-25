@@ -1,31 +1,43 @@
 # rocasift-unlocked
 
-Independent research into Roca Sifter data portability, scan-image exports, and device behavior. This is an early research notebook, not an unlocked firmware release or an official Roca/TCGplayer project.
+**Help make the Roca Sifter work with the platforms its owners choose.**
 
-## What we can contribute
+I own a Roca Sifter, and I want to use its scanning and sorting hardware with more than TCGplayer. My goal is to make it useful with **SortSwift, Card Dealer Pro, TCGTracking**, and other collection, inventory, and selling tools.
 
-- A documented route from scanned card records to their individual JPEGs.
-- A completed local export of 501 scan images, including an unidentified card.
-- Device-management observations and unsuccessful proxy experiments, with limitations recorded.
-- A practical roadmap for a resumable exporter and shared troubleshooting evidence.
+If you have one of these devices, join in. We need owners willing to compare observations, developers who can build exporters and integrations, and people with experience in embedded Linux, hardware, and diagnostic formats. Even documenting a repeatable problem or a successful export helps.
 
-Start with [scan exports](docs/scan-exports.md), [device findings](docs/device-findings.md), and [contributing](CONTRIBUTING.md).
+## What “unlocked” means here
 
-## Status
+The long-term goal is owner-controlled scanning, access to our card images and data, and the ability to connect the hardware to other workflows. Start with reliable exports; investigate local control and offline operation as separate milestones.
 
-As of October 24, 2026, this repository publishes curated documentation only. No downloader, Chrome extension, firmware image, or device unlock is included. The original captures, account data, card images, and vendor PDFs remain local and are ignored by Git.
+**This is an early research project. No firmware unlock or working third-party integration is available yet.** SortSwift, Card Dealer Pro, and TCGTracking are desired integration targets, not confirmed partners or supported integrations. This project is independent of Roca, Lexmark, and TCGplayer.
 
-## Next steps
+## Research already collected
 
-- [ ] Build a resumable downloader with a manifest and image validation.
-- [ ] Verify batch pagination and authenticated export behavior on fresh jobs.
-- [ ] Include both matched and unidentified cards, preserving scan order.
-- [ ] Investigate a browser extension that uses the owner's signed-in session.
-- [ ] Document failures with device lights, portal messages, and timestamps.
-- [ ] Verify hardware details against board photos and vendor documentation.
+- [Original findings, redacted for sharing](docs/research/FINDINGS.md): platform identification, observed API routes, cloud dependencies, and proxy experiments.
+- [Board research notes](docs/research/BOARD-NOTES.md): physical layout and questions for a verified board survey.
+- [Scan-image export workflow](docs/scan-exports.md): an existing local export contains 501 JPEGs and a card manifest, including an unidentified card.
+- [Current device findings](docs/device-findings.md): what worked, what failed, and what remains uncertain.
+- [Encrypted log format](docs/log-format.md): confirmed container and algorithms, plus a plan for owner-readable diagnostics.
 
-## Community research
+Original account captures, card images, device identifiers, credentials, and vendor PDFs are kept local. The public notes preserve useful findings without publishing those files.
 
-[u/roadtripsarefun's discussion](https://www.reddit.com/r/magicTCG/comments/1xe1agl/roca_sifter_what_now/) describes personal Chrome extensions for photo/data exports and a dashboard. We have not located a public release or reviewed that code. Contributions or links from the author would be welcome.
+## Goals
 
-Use your own device and account. Never include passwords, session cookies, authorization headers, or unredacted captures in issues or pull requests.
+- [ ] **Export every scanned card:** download images and metadata, include unidentified cards, preserve scan order, and resume interrupted exports.
+- [ ] **Define a portable format:** document IDs, image paths, card attributes, confidence, and bin/sequence information in CSV/JSON.
+- [ ] **Build platform adapters:** determine each target platform's supported imports or APIs, then test mappings with SortSwift, Card Dealer Pro, and TCGTracking users.
+- [ ] **Understand the log bundle:** document its encryption envelope and identify a supported way for owners to obtain readable diagnostics.
+- [ ] **Map the scan pipeline:** establish where images are captured, identification happens, and bin decisions are made; distinguish local work from cloud dependencies.
+- [ ] **Investigate local control:** determine whether documented interfaces or owner-accessible software can start scans and return results independently of TCGplayer.
+- [ ] **Document the hardware:** verify components, interfaces, and diagnostic access using actual board evidence.
+- [ ] **Establish backup and recovery:** seek vendor firmware, record versions, and verify recovery before attempting firmware changes.
+- [ ] **Prove an end-to-end alternative workflow:** scan cards, preserve their physical order, and import usable results into another platform. Track offline operation separately until demonstrated.
+
+## Join the effort
+
+[Open an issue](https://github.com/josharmour/rocasift-unlocked/issues) with your use case, the platform you want to connect, or a finding you can reproduce. Tell us your firmware version and what you tested; omit serial numbers, passwords, and account details.
+
+Have an exporter, Chrome extension, hardware photos, or integration experience? Open a pull request or share a public project link. We would especially like to compare notes with owners already building tools, including the author of [this community discussion](https://www.reddit.com/r/magicTCG/comments/1xe1agl/roca_sifter_what_now/).
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md). Label observations and hypotheses separately, preserve original evidence locally, and document recovery steps for experiments that change the device.
