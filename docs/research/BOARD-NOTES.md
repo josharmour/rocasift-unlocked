@@ -69,7 +69,13 @@ Key observations:
 - A second unpopulated single-row pad strip sits near the **JRESET**
   silkscreen (IMG_0017) — secondary candidate.
 - **`JCFT1`** [O]: unpopulated 4-hole pad row near `JSPD1` and the RF area
-  (IMG_0028/0030).
+  (IMG_0028/0030). Hypotheses [I], ranked: (1) CompactFlash/memory-card
+  interface — Lexmark print boards historically carry CF for fonts/storage,
+  and a working card slot would be an owner-controlled export path;
+  (2) wireless-card option header (adjacent to WiFi module / U.FL);
+  (3) factory bed-of-nails test points. Identification: continuity-map the
+  four pins during the JPRG1 session — ground/3.3V membership plus whether
+  pins ring to the SPI flash bus (storage) or the RF can (wireless).
 - Test points TP19, TP20, TP45A, 52_TP1 [O].
 - **Infineon SLB9672 TPM 2.0** [O] (IMG_0022): a discrete TPM is present,
   consistent with a signed/verified boot chain. Owners should expect secure
