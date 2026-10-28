@@ -54,8 +54,14 @@ local and not published.
 Key observations:
 
 - **`21_JPRG1`** [O]: an unpopulated 6-pin header, pin 1 marked with "1"
-  (IMG_0027). Name suggests a programming/debug port; no TX/RX/GND legend is
+  (IMG_0027; close-up IMG_0031). Single vertical row, pin 1 = top hole
+  (silkscreen "1" + chamfered outline corner). All six nets route as fine
+  (~5 mil) signal traces into a common fan-out heading toward the SoC area —
+  consistent with a JTAG/programming bus (TCK/TMS/TDI/TDO/reset class).
+  No series components inline near the header. No TX/RX/GND legend is
   silkscreened, so the pinout is untraced. Primary UART/JTAG candidate.
+  No public documentation exists for P/N 10U9020 or JPRG1 (searched
+  2026-10-27) — pinout must be derived from the board.
 - A second unpopulated single-row pad strip sits near the **JRESET**
   silkscreen (IMG_0017) — secondary candidate.
 - **`JCFT1`** [O]: unpopulated 4-hole pad row near `JSPD1` and the RF area
