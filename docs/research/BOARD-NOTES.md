@@ -62,6 +62,10 @@ Key observations:
   silkscreened, so the pinout is untraced. Primary UART/JTAG candidate.
   No public documentation exists for P/N 10U9020 or JPRG1 (searched
   2026-10-27) — pinout must be derived from the board.
+- **JPRG1 pinout progress (2026-10-27)** [O]: owner multimeter continuity
+  against chassis ground identified **pin 3 (third from pin 1 / the triangle
+  marker) as ground**. Remaining pins uncharacterized; oscilloscope boot
+  probing pending.
 - A second unpopulated single-row pad strip sits near the **JRESET**
   silkscreen (IMG_0017) — secondary candidate.
 - **`JCFT1`** [O]: unpopulated 4-hole pad row near `JSPD1` and the RF area
