@@ -19,6 +19,7 @@ The long-term goal is owner-controlled scanning, access to our card images and d
 - [Scan-image export workflow](docs/scan-exports.md): an existing local export contains 501 JPEGs and a card manifest, including an unidentified card.
 - [Current device findings](docs/device-findings.md): what worked, what failed, and what remains uncertain.
 - [Encrypted log format](docs/log-format.md): confirmed container and algorithms, plus a plan for owner-readable diagnostics.
+- [USB probe runbook](docs/usb-probe-runbook.md): how to characterize the Sifter's USB device port from Linux (descriptor dump, passive vendor-interface listen, printer-class test).
 
 Original account captures, card images, device identifiers, credentials, and vendor PDFs are kept local. The public notes preserve useful findings without publishing those files.
 

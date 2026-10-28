@@ -19,7 +19,7 @@ The retained Compute guide, pages 5–6, numbers the following parts. Compare th
 | 3 | Headphones jack | Audio output. The previous notes incorrectly called this a ground stud. |
 | 4 | USB host port | Accepts supported peripherals such as storage or a MarkNet network adapter. It does not imply that a laptop can access device storage. |
 | 5 | Ethernet | Connects the device to a LAN. Useful for separating Wi-Fi problems from job/service failures. |
-| 6 | USB device port | Connects to a computer for the embedded setup web server. USB role is documented; connector shape and accessibility on the Sifter must be verified. |
+| 6 | USB device port | Connects to a computer for the embedded setup web server. Both USB ports were observed on the Sifter's rear panel (2026-10-27); which connector is host vs device is not yet confirmed by plugging in. |
 | 7 | Ethernet LEDs | Left indicates link, right indicates activity. Activity alone does not establish successful cloud processing. |
 | 8 | Power socket | Power input, not a data interface. Verify actual power hardware on the Sifter. |
 
@@ -42,6 +42,67 @@ flowchart LR
 - **Hardware access:** the interfaces between compute, scanner, motors, and sensors. We have not identified their buses or commands.
 
 [I] USB may provide another path to the management interface. It does not, by itself, demonstrate a scanner interface, shell, serial console, mass-storage export, or independent job control.
+
+## Board survey (October 27, 2026) — first internal photos
+
+[O] The owner opened the enclosure and photographed the mainboard. Board
+identity silkscreen: **Lexmark P/N 10U9020 REV 4, EC 6147431, YYZ00C**.
+Annotated photos: [images/board/](images/board/) (IMG_0017 full board;
+IMG_0021–0030 close-ups). Photos with the unit serial label visible are kept
+local and not published.
+
+Key observations:
+
+- **`21_JPRG1`** [O]: an unpopulated 6-pin header, pin 1 marked with "1"
+  (IMG_0027). Name suggests a programming/debug port; no TX/RX/GND legend is
+  silkscreened, so the pinout is untraced. Primary UART/JTAG candidate.
+- A second unpopulated single-row pad strip sits near the **JRESET**
+  silkscreen (IMG_0017) — secondary candidate.
+- **`JCFT1`** [O]: unpopulated 4-hole pad row near `JSPD1` and the RF area
+  (IMG_0028/0030).
+- Test points TP19, TP20, TP45A, 52_TP1 [O].
+- **Infineon SLB9672 TPM 2.0** [O] (IMG_0022): a discrete TPM is present,
+  consistent with a signed/verified boot chain. Owners should expect secure
+  boot on this platform.
+- Main SoC sits under a black finned heatsink; markings not yet read [O].
+- Four Nuvoton-marked flash/memory packages left of center [O].
+- Coin cell (RTC backup) confirmed on board [O].
+- Wi-Fi module: shielded can with U.FL antenna pigtail; FCC ID not yet read
+  (needs a close-up) [O].
+- A Freescale/NXP Kinetis-class MCU (45° rotated, near `HOOK7`) is likely the
+  engine/panel controller, separate from the main SoC [I].
+- Populated connectors: JLVPS3 (power in), JRUSB1/JUSBD1 (USB), JSPD1, JFAN1,
+  16_J1 (FRONT/OPTION panel header), SW1 [O].
+
+[I] The presence of an unpopulated programming header and labeled test points
+suggests factory debug access was part of the Lexmark design. Identifying the
+JPRG1 pinout (trace-following or continuity testing with power off) is the
+next hardware step toward a serial console.
+
+## USB device port: observed behavior (October 27, 2026)
+
+[O] Plugged into a computer, the rear USB-B port enumerates as a Lexmark
+composite USB device (VID `043D`, PID `0122`, USB 2.0 High-Speed) with three
+interfaces: HID, a vendor-specific interface whose string is **"Scan"**
+(bulk OUT `0x02` / IN `0x82`), and a bidirectional USB printer class
+interface ("Print"). No CDC network gadget appears: the documented
+"EWS over USB at 169.254.76.86" behavior is absent on firmware 3.5.4.
+
+[O] Extensive passive captures on Linux (usbmon + interface claims, idle and
+during a live sift job) recorded **zero device-originated USB traffic** — the
+port is inert during normal cloud-driven operation. Raw `/dev/usb/lp0` writes
+are accepted. Probe tooling and methodology: see the repository's USB probe
+runbook (`docs/usb-probe-runbook.md` in the working copy).
+
+[I] Getting data over USB will require actively driving the vendor protocol
+on the "Scan" interface's bulk OUT endpoint; passive listening is exhausted.
+
+## Network surface (October 27, 2026)
+
+[O] Port scan of the unit found only 80/443 open — no PJL (9100), IPP (631),
+LPD (515), SSH, or telnet. Unknown HTTP paths return the SPA catch-all
+(index.html), so no print-heritage CGI endpoints were found. The network
+attack surface is the authenticated `/webservices/*` API only.
 
 ## Next experiment: identify USB behavior
 

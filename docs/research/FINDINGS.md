@@ -114,7 +114,27 @@ NO remote device-log/diagnostics endpoints on ql-api (404s). [O]
   runtime secrets — likely ACR creds/job tokens) and `apis.us.iss.lexmark.com`.
 - Logs in `mitm/`.
 
-## 9. Routes to firmware bits (remaining)
+## 9. USB device port and board survey (2026-10-27)
+
+Full details in [BOARD-NOTES.md](research/BOARD-NOTES.md). Summary:
+
+- Rear USB-B (device) port enumerates as a Lexmark composite USB device
+  (VID `043D`, PID `0122`): HID + vendor-specific interface named **"Scan"**
+  (bulk OUT `0x02` / IN `0x82`) + USB printer class ("Print"). No CDC network
+  gadget — the documented EWS-over-USB address is absent on fw 3.5.4.
+- Passive captures (Linux usbmon + interface claims, idle and during a live
+  job) show the port is inert during normal operation; data requires actively
+  driving the vendor protocol. Raw `/dev/usb/lp0` writes are accepted.
+- Network surface: only 80/443 open; no PJL/IPP/LPD/SSH; unknown HTTP paths
+  hit the SPA catch-all. Attack surface is the authenticated
+  `/webservices/*` API.
+- Mainboard photographed: Lexmark P/N 10U9020 REV 4. Unpopulated 6-pin
+  **JPRG1** programming header (prime UART/JTAG candidate), pad strip near
+  JRESET, test points, Infineon SLB9672 TPM 2.0 (signed boot chain expected),
+  SoC under heatsink, Nuvoton flash packages, coin cell, WiFi module with
+  U.FL (FCC ID pending).
+
+## 10. Routes to firmware bits (remaining)
 
 1. **Physical** — UART pads / eMMC dump on the Compute 550 board; read access and secure-boot behavior remain unverified on this board.
 2. **Ask** — Roca support (support@rocarobotics.com) or Lexmark Optra support
