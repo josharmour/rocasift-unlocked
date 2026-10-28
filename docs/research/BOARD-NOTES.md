@@ -65,7 +65,9 @@ Key observations:
 - **JPRG1 pinout progress (2026-10-27)** [O]: owner multimeter continuity
   against chassis ground identified **pin 3 (third from pin 1 / the triangle
   marker) as ground**. Remaining pins uncharacterized; oscilloscope boot
-  probing pending.
+  probing pending. Owner has soldered a pin header onto JPRG1 for reliable
+  connections (2026-10-27) — scope probing confirmed the line idles at
+  3.3V TTL (safe for direct USB-TTL adapter, no level shifter needed).
 - A second unpopulated single-row pad strip sits near the **JRESET**
   silkscreen (IMG_0017) — secondary candidate.
 - **`JCFT1`** [O]: unpopulated 4-hole pad row near `JSPD1` and the RF area
