@@ -12,6 +12,33 @@ The long-term goal is owner-controlled scanning, access to our card images and d
 
 **This is an early research project. No firmware unlock or working third-party integration is available yet.** SortSwift, Card Dealer Pro, and TCGTracking are desired integration targets, not confirmed partners or supported integrations. This project is independent of Roca, Lexmark, and TCGplayer.
 
+## Headline findings (October 2026)
+
+Original research, first published here:
+
+- **Local card-recognition API discovered** (`docs/vision-api.md`): the device runs an unauthenticated FastAPI service on port 5000 — `POST /sifter/recognize_card` accepts a card image and returns full TCGplayer catalog identification (name, set, number, rarity, `tcgp_catalog_code`) **on-device in ~0.6 s**, no cloud or account required. Sessions can be initialized and reset locally (`/sifter/initialize`, `/sifter/reset`).
+- **Authenticated settings API mapped**: `GET /webservices/settings/all` exposes 121 device settings; `PUT /webservices/settings/` changes them (verified by toggling the hidden `SettingsPort8080` flag). Reveals an on-board Hailo AI accelerator, 4 GB RAM, TPM, eMMC health telemetry, and a custom firmware-pull URL setting.
+- **Failure mode diagnosed**: jobs that stall after 1–10 cards leave the device healthy but idle — instrumented timelines show no crash, no memory exhaustion, no network loss. The cloud orchestrator simply stops commanding the device while the portal reports "in progress."
+- **USB device port characterized** (`docs/usb-probe-runbook.md`): enumerates as a Lexmark composite device (vendor "Scan" interface + printer class + HID); no network gadget on current firmware; port is inert during jobs. Linux probe tooling included.
+- **Board surveyed** (`docs/research/BOARD-NOTES.md`): Lexmark P/N 10U9020 REV 4 mainboard, unpopulated 6-pin JPRG1 programming header (ground pin identified), Infineon TPM 2.0, test points — with photos.
+- **Encrypted log format documented** (`docs/log-format.md`): downloads are CMS-enveloped AES-256 bundles sealed to Lexmark support; structure verified across five samples.
+
+## Progress
+
+| Milestone | Status |
+| --- | --- |
+| Identify platform & document local API surface | ✅ done |
+| Export scans + manifest (501 images) | ✅ done |
+| Local card recognition via Vision API | ✅ working |
+| Local sift session control (initialize/reset) | ✅ working |
+| Diagnose job-stall failure mode | ✅ instrumented |
+| Map device settings & hidden services | ✅ done |
+| UART console access (JPRG1 header) | 🔧 adapter ordered |
+| Motor/feed actuation control | 🔍 binary service channels found (ports 9002/21586/21587) |
+| Owner skill container deployment | 📝 drafted (`skills/sifter-export/`) |
+| Firmware extraction / root shell | ⏳ pending UART |
+| End-to-end third-party integration demo | ⏳ next |
+
 ## Research already collected
 
 - [Original findings, redacted for sharing](docs/research/FINDINGS.md): platform identification, observed API routes, cloud dependencies, and proxy experiments.
