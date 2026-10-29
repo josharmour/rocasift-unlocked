@@ -22,6 +22,8 @@ Original research, first published here:
 - **USB device port characterized** (`docs/usb-probe-runbook.md`): enumerates as a Lexmark composite device (vendor "Scan" interface + printer class + HID); no network gadget on current firmware; port is inert during jobs. Linux probe tooling included.
 - **Board surveyed** (`docs/research/BOARD-NOTES.md`): Lexmark P/N 10U9020 REV 4 mainboard, unpopulated 6-pin JPRG1 programming header (ground pin identified), Infineon TPM 2.0, test points — with photos.
 - **Encrypted log format documented** (`docs/log-format.md`): downloads are CMS-enveloped AES-256 bundles sealed to Lexmark support; structure verified across five samples.
+- **Platform research completed** (`docs/research/FINDINGS.md` §10e): the compute unit is Lexmark's granite2 family — Marvell Pegmatite SoC + WTM security processor owning secure boot and rootfs encryption. Public research (NCC Group, blasty/haxx.in) documents the console UART (JRIP1, 115200, RX disabled on production units), OTP-locked JTAG, flash layout, and working firmware-decryption tooling that turns a rooted device into a key oracle.
+- **Device identity refined** (`docs/research/FINDINGS.md` §10f): machine type **8085-001** (unpublished OEM variant — public docs key to 8080), unit P/N 10U0900-003, radio = AzureWave AW-CM467 WiFi/BT5.0 module ("Contains FCC ID: TLZ-CM467").
 
 ## Progress
 
@@ -33,10 +35,10 @@ Original research, first published here:
 | Local sift session control (initialize/reset) | ✅ working |
 | Diagnose job-stall failure mode | ✅ instrumented |
 | Map device settings & hidden services | ✅ done |
-| UART console access (JPRG1 header) | 🔧 adapter ordered |
+| UART / console access | ✅ **found**: JRIP1 pin 2, 115200 8N1, TX-only — full boot log captured (`device/uart/boot-full-jrip1-pin2.log`); input disabled per platform design |
 | Motor/feed actuation control | 🔍 binary service channels found (ports 9002/21586/21587) |
-| Owner skill container deployment | 📝 drafted (`skills/sifter-export/`) |
-| Firmware extraction / root shell | ⏳ pending UART |
+| Owner skill container deployment | 📝 drafted (`skills/sifter-export/`) — now the primary access route |
+| Firmware extraction / root shell | 🔄 pivoted to software route: skill/EWS → rooted userland → blasty oracle tooling |
 | End-to-end third-party integration demo | ⏳ next |
 
 ## Research already collected

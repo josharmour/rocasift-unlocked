@@ -31,6 +31,9 @@ Known so far (from macOS enumeration, 2026-10-27):
     shows nothing until exit. Use `python3 -u` for live-tailed captures.
   - Never overlap two capture windows — the second `listen-ff` dies with
     `EBUSY` while the first still holds the interface.
+  - Host sleep kills captures mid-run (`Errno 112 Host is down` /
+    `Errno 5 I/O error` at resume). For long windows inhibit sleep, e.g.
+    `systemd-inhibit --what=sleep <cmd>`, or keep the machine awake.
 
 ## Setup (once)
 
