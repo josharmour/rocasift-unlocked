@@ -149,3 +149,36 @@ Note: Roca T&C contains a software reverse-engineering restriction clause.
 - `reference/optra-ug.pdf` — generic Optra device user guide
 - `device/identity.json`, `device/external-urls.json`,
   `device/external-urls-during-job.json`, `device/device-logs.bin` (encrypted)
+
+## 11. Live event bus and the scan-image pipeline (2026-10-30)
+
+- Two unauthenticated MessagePack channels stream the scan pipeline's node
+  graph: **9002/tcp** (WebSocket, handshake succeeds on any path) and
+  **21587/tcp** (raw TCP, server speaks first). Same payloads on both. [O]
+- Envelope `[2, "<event>", [<payload>]]`; events `nodeChanged`, `nodeAdded`,
+  `nodeRemoved`. Nodes observed: `PageQueue/<id>/{Front,Back}/{state,Image}`,
+  `PageQueue/<id>/foil`, `PageQueue/ready`,
+  `Status/SideCountPermanent/{adfFront,adfBack}`. [O]
+- Page states run `Scanning` → `Safe` → `Ejected`; foil reports
+  `Detected`/`NotDetected` before recognition runs. [O]
+- The `Image` node carries geometry and a handle only — no bytes, path, or URL:
+  `mediaWindow` 1800×2020 @ 600 dpi Rgb24 in, `outputCanvas` 870×1170 @ 300 dpi
+  Jpeg out, `handle` 0 for front and 1 for back. [O]
+- MDCIF binds TCP **50800** at boot but refuses LAN connections while every
+  other port accepts ⇒ loopback or container-network bound. [O]
+- The Vision API on port 5000 has exactly four routes and returns no images;
+  `CropInfo` is four integers plus a score. [O]
+- Portal batch items expose one image field, `thumb.jpg` at **446×600**. Ten
+  larger-variant guesses (`full.jpg`, `original.jpg`, `large.jpg`,
+  `thumb@2x.jpg`, extensionless paths, query sizes) return 404, as do
+  `/batch/<id>/scans` and `/batch/<id>/images`. [O]
+- The thumbnail's aspect ratio matches the bus's output canvas ⇒ the portal
+  image is a ~0.5× downscale of the device JPEG, not a separate capture. [I]
+- `bucket.optra.com` is an S3 bucket behind CloudFront; anonymous access returns
+  `403 AccessDenied`. [O]
+- **Conclusion:** no owner-reachable surface returns scan image bytes. Full
+  resolution would need code execution on the device (MDCIF or its image store),
+  a trusted TLS position for the upload, or vendor storage credentials. [I]
+
+Details, reproduction steps, and the full port table: [`docs/surfaces.md`](../surfaces.md).
+Capture tool: [`tools/bus-probe.py`](../../tools/bus-probe.py).

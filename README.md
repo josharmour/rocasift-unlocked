@@ -23,6 +23,7 @@ Original research, first published here:
 - **Board surveyed** (`docs/research/BOARD-NOTES.md`): Lexmark P/N 10U9020 REV 4 mainboard, unpopulated 6-pin JPRG1 programming header (ground pin identified), Infineon TPM 2.0, test points — with photos.
 - **Encrypted log format documented** (`docs/log-format.md`): downloads are CMS-enveloped AES-256 bundles sealed to Lexmark support; structure verified across five samples.
 - **Platform research completed** (`docs/research/FINDINGS.md` §10e): the compute unit is Lexmark's granite2 family — Marvell Pegmatite SoC + WTM security processor owning secure boot and rootfs encryption. Public research (NCC Group, blasty/haxx.in) documents the console UART (JRIP1, 115200, RX disabled on production units), OTP-locked JTAG, flash layout, and working firmware-decryption tooling that turns a rooted device into a key oracle.
+- **Live scan event bus decoded** (`docs/surfaces.md`): two unauthenticated MessagePack channels (ports 9002 and 21587) stream the scan pipeline's node graph in real time — per-page front/back state, foil detection, and the geometry of each captured image (1800×2020 @ 600 dpi in, 870×1170 @ 300 dpi JPEG out). The bus announces images but never carries their bytes.
 - **Device identity refined** (`docs/research/FINDINGS.md` §10f): machine type **8085-001** (unpublished OEM variant — public docs key to 8080), unit P/N 10U0900-003, radio = AzureWave AW-CM467 WiFi/BT5.0 module ("Contains FCC ID: TLZ-CM467").
 
 ## Progress
@@ -36,7 +37,8 @@ Original research, first published here:
 | Diagnose job-stall failure mode | ✅ instrumented |
 | Map device settings & hidden services | ✅ done |
 | UART / console access | ✅ **found**: JRIP1 pin 2, 115200 8N1, TX-only — full boot log captured (`device/uart/boot-full-jrip1-pin2.log`); input disabled per platform design |
-| Motor/feed actuation control | 🔍 binary service channels found (ports 9002/21586/21587) |
+| Motor/feed actuation control | 🔍 event bus decoded (9002/21587); 21586 silent; MDCIF control port 50800 is loopback-bound |
+| Full-resolution scan images | ❌ blocked: device holds 870×1170 JPEG (1800×2020 raw); portal serves 446×600 only — see `docs/surfaces.md` |
 | Owner skill container deployment | 📝 drafted (`skills/sifter-export/`) — now the primary access route |
 | Firmware extraction / root shell | 🔄 pivoted to software route: skill/EWS → rooted userland → blasty oracle tooling |
 | End-to-end third-party integration demo | ⏳ next |
@@ -49,6 +51,7 @@ Original research, first published here:
 - [Current device findings](docs/device-findings.md): what worked, what failed, and what remains uncertain.
 - [Encrypted log format](docs/log-format.md): confirmed container and algorithms, plus a plan for owner-readable diagnostics.
 - [USB probe runbook](docs/usb-probe-runbook.md): how to characterize the Sifter's USB device port from Linux (descriptor dump, passive vendor-interface listen, printer-class test).
+- [Device surface inventory](docs/surfaces.md): every network port, protocol, and auth requirement, the event-bus message format, and where scan images actually live.
 - [Sifter Vision API](docs/vision-api.md): the local card-recognition service on port 5000 — submit a card image, get TCGplayer catalog identification on-device.
 
 Original account captures, card images, device identifiers, credentials, and vendor PDFs are kept local. The public notes preserve useful findings without publishing those files.
