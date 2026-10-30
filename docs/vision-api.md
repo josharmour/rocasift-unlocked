@@ -58,6 +58,28 @@ Response (verified against a real scan from the device's own export):
 Recognition completed in **0.59 s** on-device — fast enough for real-time
 sorting workflows driven by an external controller.
 
+## Score semantics — read this before building on it
+
+`detail` is **not** a success indicator. It reads
+`"Card recognized successfully."` on every response, including for input
+that is not a card. `recognition_score` is the only quality signal, and it
+can be negative:
+
+| Input | Returned | Score |
+| --- | --- | --- |
+| real card | correct name / set | 0.49 – 0.72 |
+| card back | *Back of a Magic Card* / `Sorting Robotics Extra` | −0.027 |
+| blank gray JPEG | *Find the Assassin (cont'd)* / `Assassin's Creed Minigames` | 0.185 |
+
+The device carries synthetic catalog sets (`Sorting Robotics Extra`,
+`Assassin's Creed Minigames`) that act as catch-all classes for non-card
+imagery, with non-numeric `tcgp_catalog_code` values such as
+`Sorting Robotics Extra-Back of a Magic Card.jpg`.
+
+Threshold on `recognition_score` (≈0.3 separated real from non-card input
+in a six-sample test, not yet calibrated) and reject non-numeric catalog
+codes. Verified 2026-10-30 against firmware 3.5.4, `x-api-version: 1.8.10`.
+
 ## Why this matters
 
 This is the device's core function callable locally: any tool on the same
