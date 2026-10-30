@@ -102,9 +102,37 @@ PageQueue/ready                   -> true when the feeder is idle
 Status/SideCountPermanent/adfFront, adfBack   -> lifetime sheet counters
 ```
 
-Page states observed in order for each sheet: `Scanning` → `Safe` → `Ejected`,
-then `nodeRemoved`. A typical card produces roughly a dozen messages across both
-sides plus two counter updates.
+### Card lifecycle `[O]`
+
+One sheet, deduplicated across the two channels (every event is delivered on
+both; a WebSocket connection that starts late can miss frames):
+
+```
+nodeAdded    PageQueue/<id>/eject
+nodeChanged  PageQueue/<id>/Front/state   Scanning
+nodeChanged  PageQueue/<id>/Back/state    Scanning
+nodeChanged  PageQueue/<id>/foil          NotDetected | Detected
+nodeChanged  PageQueue/<id>/Front/state   Safe
+nodeChanged  PageQueue/<id>/Back/state    Safe
+nodeChanged  PageQueue/<id>/Front/Image/{composition,handle,mediaWindow/*,outputCanvas/*,compression}
+nodeChanged  PageQueue/<id>/Back/Image/{...}
+nodeChanged  PageQueue/<id>/Front/state   Ejected
+nodeChanged  PageQueue/<id>/Back/state    Ejected
+nodeRemoved  PageQueue/<id>
+```
+
+`Image` fields arrive as individual leaf updates rather than one object, so a
+single sheet produces roughly twenty `Image` messages. `PageQueue/ready` reads
+`true` between sheets. `Status/SideCountPermanent/adfFront` and `adfBack`
+increment by one per side scanned.
+
+Page ids advance by two per sheet (`19`, `21`, … `67`), which suggests an id is
+consumed per side internally even though front and back share one node.
+
+A 60-second capture during a live run produced **494 messages across 25 sheets**:
+445 `nodeChanged`, 25 `nodeAdded`, 24 `nodeRemoved`. The raw TCP channel carried
+345 of them and the WebSocket channel 149 — the WebSocket connection was opened
+later and missed the earlier frames.
 
 The `Image` node is the interesting one — it announces that pixels exist:
 
