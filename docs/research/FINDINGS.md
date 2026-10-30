@@ -164,6 +164,10 @@ Note: Roca T&C contains a software reverse-engineering restriction clause.
 - The `Image` node carries geometry and a handle only — no bytes, path, or URL:
   `mediaWindow` 1800×2020 @ 600 dpi Rgb24 in, `outputCanvas` 870×1170 @ 300 dpi
   Jpeg out, `handle` 0 for front and 1 for back. [O]
+- **21586/tcp** accepts connections but stays silent; any input closes it within
+  ~5 ms (HTTP, TLS, MessagePack, and every single-byte candidate tried). No
+  handshake found — it behaves like an internal consumer that drops foreign
+  input rather than a service with a discoverable protocol. [O]
 - MDCIF binds TCP **50800** at boot but refuses LAN connections while every
   other port accepts ⇒ loopback or container-network bound. [O]
 - The Vision API on port 5000 has exactly four routes and returns no images;

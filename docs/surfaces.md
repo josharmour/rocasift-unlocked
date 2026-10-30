@@ -16,7 +16,7 @@ Reproduce the event-bus captures with [`tools/bus-probe.py`](../tools/bus-probe.
 | 5000/tcp | HTTP | **none** | FastAPI "Sifter Vision API" — card recognition |
 | 5355/udp | LLMNR | none | Windows name resolution only |
 | 9002/tcp | WebSocket (MessagePack) | **none** | Live node-graph event bus |
-| 21586/tcp | TCP | none | Accepts connections, sends nothing, ignores HTTP |
+| 21586/tcp | TCP | none | Accepts, silent indefinitely, closes on any input (~5 ms); no protocol found |
 | 21587/tcp | Raw TCP (MessagePack) | **none** | Same event stream as 9002, server speaks first |
 | 50800/tcp | TCP (MDCIF) | — | Device-control server; **loopback-bound**, refused from LAN |
 
@@ -67,6 +67,17 @@ Connections from the LAN are refused while every other listed port accepts, so
 the listener is bound to loopback or a container network. This is the process
 that owns the scan pipeline's image handles; reaching it requires code
 execution on the device.
+
+### Port 21586 — silent, input-rejecting `[O]`
+
+Accepts TCP and then says nothing: a connection held open for 15 s during an
+active scan received zero bytes. Any input closes it within ~5 ms — tested with
+every byte value `0x00`–`0x0f`, `A`–`Z`, `{}[]<>`, `0x7f`, `0xff`, plus HTTP
+requests, a TLS ClientHello, and MessagePack payloads. Multi-byte payloads that
+leave unread data in the socket produce a TCP reset rather than a clean FIN.
+UDP on the same port is silent. No handshake was found; the listener behaves
+like an internal consumer that drops foreign input rather than a service with a
+discoverable protocol.
 
 ## Event bus protocol — ports 9002 and 21587 `[O]`
 
