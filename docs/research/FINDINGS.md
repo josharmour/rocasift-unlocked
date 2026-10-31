@@ -116,7 +116,7 @@ NO remote device-log/diagnostics endpoints on ql-api (404s). [O]
 
 ## 9. USB device port and board survey (2026-10-27)
 
-Full details in [BOARD-NOTES.md](research/BOARD-NOTES.md). Summary:
+Full details in [BOARD-NOTES.md](BOARD-NOTES.md). Summary:
 
 - Rear USB-B (device) port enumerates as a Lexmark composite USB device
   (VID `043D`, PID `0122`): HID + vendor-specific interface named **"Scan"**
@@ -154,7 +154,8 @@ Note: Roca T&C contains a software reverse-engineering restriction clause.
 
 - Two unauthenticated MessagePack channels stream the scan pipeline's node
   graph: **9002/tcp** (WebSocket, handshake succeeds on any path) and
-  **21587/tcp** (raw TCP, server speaks first). Same payloads on both. [O]
+  **21587/tcp** (raw TCP; sends during scan activity, no unsolicited
+  banner). Same payloads on both. [O]
 - Envelope `[2, "<event>", [<payload>]]`; events `nodeChanged`, `nodeAdded`,
   `nodeRemoved`. Nodes observed: `PageQueue/<id>/{Front,Back}/{state,Image}`,
   `PageQueue/<id>/foil`, `PageQueue/ready`,
@@ -163,7 +164,8 @@ Note: Roca T&C contains a software reverse-engineering restriction clause.
   `Detected`/`NotDetected` before recognition runs. [O]
 - The `Image` node carries geometry and a handle only — no bytes, path, or URL:
   `mediaWindow` 1800×2020 @ 600 dpi Rgb24 in, `outputCanvas` 870×1170 @ 300 dpi
-  Jpeg out, `handle` 0 for front and 1 for back. [O]
+  Jpeg out, `handle` 0 for front and 1 for back; the handle is a per-side
+  slot index reused for every page, not a durable image id. [O]
 - **21586/tcp** accepted connections but stayed silent in the observed window;
   tested inputs caused closure within ~5 ms. No handshake was established. [O]
   An internal consumer is a hypothesis; authentication, framing and owner

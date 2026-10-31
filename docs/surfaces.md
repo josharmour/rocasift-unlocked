@@ -19,7 +19,7 @@ Reproduce the event-bus captures with [`tools/bus-probe.py`](../tools/bus-probe.
 | 5355/udp | LLMNR | none | Windows name resolution only |
 | 9002/tcp | WebSocket (MessagePack) | **none** | Live node-graph event bus |
 | 21586/tcp | TCP; application protocol unknown | unknown | Accepted connections stayed silent during the observed window; tested inputs caused closure; no handshake established |
-| 21587/tcp | Raw TCP (MessagePack) | **none** | Same event stream as 9002, server speaks first |
+| 21587/tcp | Raw TCP (MessagePack) | **none** | Same event stream as 9002; sends during scan activity. An idle receive-only probe got zero bytes, so “server speaks first” is activity-dependent, not a banner |
 | 50800/tcp | TCP (MDCIF) | unknown | Listener announced at boot; prior LAN attempts refused; binding and protocol unresolved |
 
 Also present but not network-reachable: the rear USB-B device port (composite
@@ -70,7 +70,7 @@ filtering remain competing explanations; neither the binding nor ownership of
 image handles is established. The log proves TCP, not HTTP or a request format.
 Saved service/client definitions are needed before choosing a supported access path.
 
-### Port 21586 — silent, input-rejecting `[O]`
+### Port 21586 — silent, closes tested inputs `[O]`
 
 Accepts TCP and then says nothing: a connection held open for 15 s during an
 active scan received zero bytes. The tested inputs closed it within ~5 ms — historical tests included
@@ -82,9 +82,11 @@ service or proof that all possible input is rejected.
 
 ## Event bus protocol — ports 9002 and 21587 `[O]`
 
-Both ports carry the same MessagePack stream. `21587` is raw TCP and speaks
-first; `9002` is a WebSocket server that completes a handshake on any path and
-then sends binary frames of the same payloads. Neither requires authentication.
+Both ports carry the same MessagePack stream. `21587` is raw TCP and sends
+during scan activity; an idle receive-only probe received zero bytes, so it does
+not emit an unsolicited banner. `9002` is a WebSocket server that completes a
+handshake on any path and then sends binary frames of the same payloads. Neither
+requires authentication.
 
 Envelope: a three-element array.
 
@@ -146,9 +148,10 @@ The `Image` node announces image geometry and a handle; it does not return pixel
  "compression": "Jpeg"}
 ```
 
-`handle` is `0` for the front side and `1` for the back. There is no path, URL,
-byte count, or payload — only geometry and a numeric handle. Its owning process, backing store and
-lifetime remain unverified.
+`handle` is `0` for the front side and `1` for the back, but it is a per-side
+slot index reused for every page, not a durable image id. There is no path, URL,
+byte count, or payload — only geometry and a numeric handle. Its owning process,
+backing store and lifetime remain unverified.
 
 ## Image geometry and retrieval evidence
 

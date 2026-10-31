@@ -34,3 +34,5 @@ The official [light guide](https://support.rocarobotics.com/hc/en-us/articles/47
 - Can vendor-provided firmware or documented hardware access support owner backups?
 
 Update October 30: JRIP1 UART output has been captured and fully annotated; interactive input/login remains unproved. No working firmware extraction or offline workflow is established. See the [complete diagnostic review](research/diagnostic-research-2026-10-30.md).
+
+Update October 31: registration support was fixed and images now reach the cloud, so upload success is no longer the research criterion. The remaining goal is owner-controlled visibility into the device's processes, logging, settings consumers and image pipeline. See [device internals](research/device-internals-2026-10-31.md).

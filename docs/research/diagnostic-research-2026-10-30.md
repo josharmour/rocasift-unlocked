@@ -2,11 +2,13 @@
 
 Consolidated October 30, 2026 (America/Los_Angeles; captures/report also use October 31 UTC). This note records the investigation's results and unresolved prerequisites. `[O]` means observed in saved evidence, `[I]` means an inference, and **unverified** means no supporting implementation or successful test was established. It supersedes stronger claims in earlier notes where identified below.
 
+Follow-up: [Device internals, image lifecycle and logging map](device-internals-2026-10-31.md) consolidates the process/IPC map, settings-consumer status, four image states, log destinations and three next experiments.
+
 ## Complete UART analysis
 
 Open the [self-contained annotated report](uart-boot/roca-uart-annotated.html) locally in a browser, or download the [complete ZIP](uart-boot/roca-uart-report.zip). GitHub's source viewer does not execute the report's search controls.
 
-Every entry includes its original source line, meaning, relevance to scan failures/missing images/settings/log access, next verification, and confidence. Machine IDs, runtime identifiers and credential-like values are redacted in quoted text and generated explanations. Original captures remain under ignored `device/uart/`.
+Every entry includes its original source line, meaning, relevance to the scan pipeline, image handling, settings and log access, next verification, and confidence. Machine IDs, runtime identifiers and credential-like values are redacted in quoted text and generated explanations. Original captures remain under ignored `device/uart/`.
 
 | Coverage | Count |
 | --- | ---: |
@@ -35,7 +37,7 @@ Set `ROCA_UART_SOURCE` to another authorized capture directory when needed. `cov
 
 ## Confirmed architecture and useful log destinations
 
-- [O] U-Boot 2022.01, Linux 6.12.54-yocto-standard, ARM64, systemd 255 and Lexmark Poky/Yocto 5.0.7 scarthgap appear in the boot output. Machine-model strings include `mv6270 Cobalt Edge yyz00b`; those strings are not independent silicon identification.
+- [O] U-Boot 2022.01, Linux 6.12.54-yocto-standard (later 2026-10-31 captures show 6.12.90-yocto-standard), ARM64, systemd 255 and Lexmark Poky/Yocto 5.0.7 scarthgap appear in the boot output. Machine-model strings include `mv6270 Cobalt Edge yyz00b`; those strings are not independent silicon identification.
 - [O] Kernel arguments route console output to `ttyS0,115200n8`. Linux also registers `ttyS1` and `/dev/ttyLPP0`. No physical pinout, usable receive path, getty or interactive login follows from those registrations.
 - [O] Root is read-only SquashFS on a dm-verity mapping over `mmcblk1p3`. SHA verification and dm-verity establish integrity operations, **not encryption or a complete security-fuse policy**. AVS efuse fields concern voltage calibration.
 - [O] The eMMC reports 14.5 GiB and eight logical partitions. `/var`, volatile mounts, Docker storage and actual overlay2 merged mounts appear in startup/shutdown. None identifies a scan spool or proves image persistence.
@@ -51,21 +53,21 @@ Set `ROCA_UART_SOURCE` to another authorized capture directory when needed. `cov
 | 9002 / 21587 | Historical captures contain WebSocket/raw-TCP MessagePack node events. | Metadata does not prove image durability or successful cloud upload. |
 | 21586 | Historical tests recorded silent accepted TCP connections and closure after tested inputs. | Authentication, owner process, framing and valid handshake remain unknown. “Any input” overstates a finite test set; do not repeat guessed payload testing during scans. |
 | 50800 / MDCIF | UART explicitly prints a TCP listener. LAN connection attempts were refused in prior observations. | HTTP is unproved. Refusal does not distinguish loopback/container binding, service lifetime or filtering. Peer fields `0.0.0.0:0` are not proof of a localhost client. |
-| `SettingsDebugLevel` | The owner reported level 7 during scanning; host logging and vendor LBTRACE infrastructure exist. | No comparable known-level baseline proves a verbosity change, consumer or destination. No level was changed for this analysis. |
+| `SettingsDebugLevel` | The owner reported level 7 during scanning (owner report, not a saved artifact); host logging and vendor LBTRACE infrastructure exist. | No comparable known-level baseline proves a verbosity change, consumer or destination. No level was changed for this analysis. |
 | `WebBrowser`, `WebBrowserURL` / earlier `web_url` hypothesis | A device UI service and a D-Bus proxy filtered to `com.optra.DeviceUI` appear. | The exact setting consumer, fetch/navigation behavior, process and network namespace remain unverified. A localhost destination does not automatically change the origin of a request. No localhost/proxy test was performed. |
 | `u8NVSMembersDataFilledIn ver 4` | Follows MDC connection, command-processing and `primeNVSSystem` messages in saved boots. | Internal field/type/version semantics require source. It is not established as a writable EWS setting, debug level or firmware version. |
 
-[O] In three saved sequences, connection-to-data-filled-marker delays are approximately 116 ms, 119 ms and 115 ms on each sequence's own MDC clock. This is temporal order, not a captured call stack or proof which command triggered initialization. The owner's separate `00133.072456` marker was not found in the saved files; its neighboring context is unknown.
+[O] In seven saved connection sequences, connection-to-data-filled-marker delays span approximately 114–120 ms on each sequence's own MDC clock. The owner's separate `00133.072456` marker is now present in saved captures (`device/usb/uart-live-20261031T0808-job-failure.log:721`; `device/usb/uart-screen-scrollback-20261031T074747.txt:99994`), so its neighboring context is no longer unknown: it follows the same accept → `Start command processing` → `primeNVSSystem` sequence as the other boots. This is temporal order, not a captured call stack or proof which command triggered initialization.
 
-## Live event evidence and failure interpretation
+## Live event evidence and pipeline interpretation
 
 [O] The additional local evidence retained under `device/research/live-sifter-20261031/` comprises 1,807 initial event records, 3,170 continuation records and 11 portal snapshots. These contain receipt timestamps and node/status observations; raw job identifiers and captures are not published. Earlier published captures and schema are described in [surfaces.md](../surfaces.md).
 
 [O] The bus reports per-side `Scanning`, `Safe`, `Ejected`, foil state, counters and image descriptors. Descriptor geometry is not a successful byte read, durable file or server acknowledgement. Node removal does not establish deletion of persisted files.
 
-[I] Startup `scan_queue_prune` messages for page 0, scheduler-before-init errors, PWM fallback, TPM self-test and library-memory-locking warnings need correlation with an actual failing scan. Their presence in boot logs alone does not diagnose lost cards. The scrollback also contains orderly shutdown; its socket closures must not be presented as spontaneous crashes.
+[I] Startup `scan_queue_prune` messages for page 0, scheduler-before-init errors, PWM fallback, TPM self-test and library-memory-locking warnings need correlation with an actual scan. Their presence in boot logs alone does not establish a causal link to a scan outcome. The scrollback also contains orderly shutdown; its socket closures must not be presented as spontaneous crashes.
 
-To locate a failure, correlate one scan/page identifier across acquisition, processing, buffer/spool assignment (if any), upload attempts/retries and server acknowledgement. Distinguish RAM-only data, disk-persisted data, uploaded-but-unindexed data and deleted data. No saved boot message establishes which case applies. A stalled portal state and healthy sampled host telemetry do not by themselves prove a cloud-orchestrator defect.
+To trace one side through the pipeline, correlate its page identifier across acquisition, processing, buffer/spool assignment (if any), upload attempts/retries and server acknowledgement. Distinguish RAM-only data, disk-persisted data, uploaded-but-unindexed data and deleted data. No saved boot message establishes which case applies. A stalled portal state and healthy sampled host telemetry do not by themselves prove a cloud-orchestrator defect.
 
 ## Diagnostic skill and access feasibility
 

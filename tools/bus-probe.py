@@ -3,7 +3,7 @@
 
 Two unauthenticated channels carry the same MessagePack stream:
 
-  21587  raw TCP, server speaks first
+  21587  raw TCP; sends during scan activity (no unsolicited banner)
   9002   WebSocket, handshake succeeds on any path
 
 Usage:
@@ -15,6 +15,7 @@ and summarises event and node counts at the end. Read-only: nothing is sent to
 the device beyond the WebSocket handshake.
 """
 import argparse, base64, json, os, socket, struct, sys, threading, time
+from datetime import datetime, timezone
 from collections import Counter
 
 
@@ -157,7 +158,8 @@ def raw_stream(host, secs, sink):
                 buf = b""
                 break
             buf = buf[u.i:]
-            sink.append({"channel": "21587", "msg": obj})
+            sink.append({"utc": datetime.now(timezone.utc).isoformat(),
+                         "channel": "21587", "msg": obj})
             report("21587", obj)
     s.close()
 
@@ -208,7 +210,8 @@ def ws_stream(host, secs, sink):
         print(f"[9002] frame opcode={opcode} len={ln}")
         try:
             obj = Unpacker(payload).unpack()
-            sink.append({"channel": "9002", "msg": obj})
+            sink.append({"utc": datetime.now(timezone.utc).isoformat(),
+                         "channel": "9002", "msg": obj})
             report("9002", obj)
         except Exception as e:
             print(f"[9002] non-msgpack payload ({e}): {payload[:120]!r}")

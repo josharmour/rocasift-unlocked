@@ -14,7 +14,9 @@ The long-term goal is owner-controlled scanning, access to our card images and d
 
 ## Latest diagnostic research
 
-[Complete UART analysis and diagnostic research](docs/research/diagnostic-research-2026-10-30.md) covers every saved boot line, log destinations, internal settings/services, missing-image recovery questions, and access prerequisites. The report distinguishes observations from hypotheses and corrects earlier claims about loopback binding, encryption and debug access.
+[Complete UART analysis and diagnostic research](docs/research/diagnostic-research-2026-10-30.md) covers every saved boot line, log destinations, internal settings/services, image-lifecycle questions, and access prerequisites. The report distinguishes observations from hypotheses and corrects earlier claims about loopback binding, encryption and debug access.
+
+Registration support was subsequently fixed and images now reach the cloud. Upload success is therefore no longer the research criterion: the goal is owner-controlled visibility into the device's processes, logging, settings consumers and image pipeline.
 
 ## Headline findings (October 2026)
 
@@ -22,11 +24,11 @@ Original research, first published here:
 
 - **Local card-recognition API discovered** (`docs/vision-api.md`): the device runs an unauthenticated FastAPI service on port 5000 — `POST /sifter/recognize_card` accepts a card image and returns full TCGplayer catalog identification (name, set, number, rarity, `tcgp_catalog_code`) **on-device in ~0.6 s**, no cloud or account required. Sessions can be initialized and reset locally (`/sifter/initialize`, `/sifter/reset`).
 - **Authenticated settings API mapped**: `GET /webservices/settings/all` exposes 121 device settings; `PUT /webservices/settings/` changes them (verified by toggling the hidden `SettingsPort8080` flag). Reveals an on-board Hailo AI accelerator, 4 GB RAM, TPM, eMMC health telemetry, and a custom firmware-pull URL setting.
-- **Job stalls instrumented**: sampled host telemetry remained responsive during some stalled jobs while the portal reported "in progress." The initiating cause remains unproved; acquisition, upload and cloud acknowledgements need correlation for the same scan.
+- **Scan pipeline instrumented**: the event bus exposes per-side state, counters and image descriptors, and host telemetry stayed responsive during observed jobs. The bus does not carry image bytes or upload acknowledgements, so byte-level ownership, persistence and release remain unresolved.
 - **USB device port characterized** (`docs/usb-probe-runbook.md`): enumerates as a Lexmark composite device (vendor "Scan" interface + printer class + HID); no network gadget on current firmware; port is inert during jobs. Linux probe tooling included.
 - **Board surveyed** (`docs/research/BOARD-NOTES.md`): Lexmark P/N 10U9020 REV 4 mainboard, unpopulated 6-pin JPRG1 programming header (ground pin identified), Infineon TPM 2.0, test points — with photos.
 - **Encrypted log format documented** (`docs/log-format.md`): downloads are CMS-enveloped AES-256 bundles sealed to Lexmark support; structure verified across five samples.
-- **Platform research reviewed**: this device reports an ARM64 `mv6270 Cobalt Edge` model, U-Boot 2022.01, Linux 6.12.54 and Lexmark Yocto. Related NCC Group and blasty research provides hypotheses; this unit's encryption, OTP/JTAG policy and UART receive path are not established by those studies. Its captured root mapping uses dm-verity/SquashFS.
+- **Platform research reviewed**: this device reports an ARM64 `mv6270 Cobalt Edge` model, U-Boot 2022.01, Linux 6.12.54 (later captures 6.12.90) and Lexmark Yocto. Related NCC Group and blasty research provides hypotheses; this unit's encryption, OTP/JTAG policy and UART receive path are not established by those studies. Its captured root mapping uses dm-verity/SquashFS.
 - **Live scan event bus decoded** (`docs/surfaces.md`): two unauthenticated MessagePack channels (ports 9002 and 21587) stream the scan pipeline's node graph in real time — per-page front/back state, foil detection, and the geometry of each captured image (1800×2020 @ 600 dpi in, 870×1170 @ 300 dpi JPEG out). The bus announces images but never carries their bytes.
 - **Device identity refined** (`docs/research/FINDINGS.md` §10f): machine type **8085-001** (unpublished OEM variant — public docs key to 8080), unit P/N 10U0900-003, radio = AzureWave AW-CM467 WiFi/BT5.0 module ("Contains FCC ID: TLZ-CM467").
 
@@ -38,7 +40,7 @@ Original research, first published here:
 | Export scans + manifest (501 images) | ✅ done |
 | Local card recognition via Vision API | ✅ working |
 | Local sift session control (initialize/reset) | ✅ working |
-| Diagnose job-stall failure mode | ✅ instrumented |
+| Trace scan pipeline internals | ✅ instrumented |
 | Map device settings & hidden services | ✅ done |
 | UART / console access | ✅ JRIP1 output captured at 115200 8N1; interactive input/login remains unproved. Complete saved-capture analysis is available. |
 | Motor/feed actuation control | 🔍 Event bus decoded (9002/21587); 21586 protocol unresolved; MDCIF announces TCP 50800, with binding/access unresolved. |
@@ -56,6 +58,7 @@ Original research, first published here:
 - [Encrypted log format](docs/log-format.md): confirmed container and algorithms, plus a plan for owner-readable diagnostics.
 - [USB probe runbook](docs/usb-probe-runbook.md): how to characterize the Sifter's USB device port from Linux (descriptor dump, passive vendor-interface listen, printer-class test).
 - [Device surface inventory](docs/surfaces.md): every network port, protocol, and auth requirement, the event-bus message format, and where scan images actually live.
+- [Device internals, image lifecycle and logging map](docs/research/device-internals-2026-10-31.md): process/IPC ownership caveats, settings-consumer status, the four image states, log destinations, exporter access requirements, and three next experiments.
 - [Sifter Vision API](docs/vision-api.md): the local card-recognition service on port 5000 — submit a card image, get TCGplayer catalog identification on-device.
 
 Original account captures, card images, device identifiers, credentials, and vendor PDFs are kept local. The public notes preserve useful findings without publishing those files.
