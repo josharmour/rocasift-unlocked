@@ -1,0 +1,12 @@
+{
+  "source_hashes_unchanged": true,
+  "source_lines_individually_verified": 103380,
+  "derived_lines": 732,
+  "annotation_entries": 4382,
+  "all_line_hashes_match": true,
+  "identifier_redaction_check": "passed, including reassembled hexadecimal source",
+  "html_ids_and_links": "passed",
+  "automatic_external_resource_loads": 0,
+  "zip_integrity": "passed",
+  "visual_preview": "not completed: browser policy rejected local file: URL; no workaround attempted"
+}

@@ -1,11 +1,12 @@
 # Privileges to request for sifter-export
 
-From docs.optra.com/skills/privileges — request the minimum set that lets
-the container read device data and write removable media:
+Proposed privileges, not verified grants on this OEM device. The portal
+privilege labels alone do not expose host/scanner directories: the actual
+source mounts or supported producer/API integration must be specified.
 
 | Privilege | Why |
 | --- | --- |
-| File system volumes | Read the scan-pipeline output directories and device state |
+| File system volumes | Read only explicitly granted/mounted data; scanner/host paths are not yet identified or approved |
 | Removable media | Write exports directly to a USB stick in the USB-A host port (alternative to network POST) |
 
 Deliberately NOT requested (keep the approval case simple):

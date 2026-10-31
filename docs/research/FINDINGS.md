@@ -164,12 +164,13 @@ Note: Roca T&C contains a software reverse-engineering restriction clause.
 - The `Image` node carries geometry and a handle only — no bytes, path, or URL:
   `mediaWindow` 1800×2020 @ 600 dpi Rgb24 in, `outputCanvas` 870×1170 @ 300 dpi
   Jpeg out, `handle` 0 for front and 1 for back. [O]
-- **21586/tcp** accepts connections but stays silent; any input closes it within
-  ~5 ms (HTTP, TLS, MessagePack, and every single-byte candidate tried). No
-  handshake found — it behaves like an internal consumer that drops foreign
-  input rather than a service with a discoverable protocol. [O]
-- MDCIF binds TCP **50800** at boot but refuses LAN connections while every
-  other port accepts ⇒ loopback or container-network bound. [O]
+- **21586/tcp** accepted connections but stayed silent in the observed window;
+  tested inputs caused closure within ~5 ms. No handshake was established. [O]
+  An internal consumer is a hypothesis; authentication, framing and owner
+  process remain unknown. [I]
+- MDCIF announces TCP **50800** at boot; prior LAN connections were refused. [O]
+  Loopback/container binding, service state and filtering remain unresolved;
+  the refusal does not prove a binding address. [I]
 - The Vision API on port 5000 has exactly four routes and returns no images;
   `CropInfo` is four integers plus a score. [O]
 - Portal batch items expose one image field, `thumb.jpg` at **446×600**. Ten
@@ -180,9 +181,18 @@ Note: Roca T&C contains a software reverse-engineering restriction clause.
   image is a ~0.5× downscale of the device JPEG, not a separate capture. [I]
 - `bucket.optra.com` is an S3 bucket behind CloudFront; anonymous access returns
   `403 AccessDenied`. [O]
-- **Conclusion:** no owner-reachable surface returns scan image bytes. Full
-  resolution would need code execution on the device (MDCIF or its image store),
-  a trusted TLS position for the upload, or vendor storage credentials. [I]
+- **Qualified conclusion:** no tested local endpoint returned full-resolution
+  image bytes; portal thumbnails are exportable. Image persistence, handle
+  ownership and a supported full-resolution retrieval route remain unresolved. [O/I]
+
+## 12. Complete UART and diagnostic review
+
+The [October 30 diagnostic research](diagnostic-research-2026-10-30.md) includes
+the complete per-line boot report, settings/service map, access prerequisites,
+USB/reset questions and corrections to earlier platform extrapolations.
+It covers 103,380 original physical lines, with exact duplicate-range mappings
+and 732 reconstructed UART lines. Most source lines are blank scrollback.
+Raw captures remain private under `device/`; only redacted derivatives are published.
 
 Details, reproduction steps, and the full port table: [`docs/surfaces.md`](../surfaces.md).
 Capture tool: [`tools/bus-probe.py`](../../tools/bus-probe.py).

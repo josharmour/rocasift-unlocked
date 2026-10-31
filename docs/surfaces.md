@@ -1,9 +1,11 @@
 # Device surface inventory
 
 Everything the Sifter exposes on the network, what each surface will tell you,
-and where the scan images actually live. Collected read-only on firmware 3.5.4
+and what image metadata is visible. Historical observations on firmware 3.5.4
 (build target `granite2v8-sifter`) on 2026-10-30, during and around live scan
 jobs. Observations are marked `[O]`, inferences `[I]`.
+
+The [later UART/diagnostic review](research/diagnostic-research-2026-10-30.md) qualifies binding, image-retention and console-access claims. Historical unknown-protocol probes below are recorded as prior experiments, not a recommendation to repeat them during scans.
 
 Reproduce the event-bus captures with [`tools/bus-probe.py`](../tools/bus-probe.py).
 
@@ -16,13 +18,13 @@ Reproduce the event-bus captures with [`tools/bus-probe.py`](../tools/bus-probe.
 | 5000/tcp | HTTP | **none** | FastAPI "Sifter Vision API" — card recognition |
 | 5355/udp | LLMNR | none | Windows name resolution only |
 | 9002/tcp | WebSocket (MessagePack) | **none** | Live node-graph event bus |
-| 21586/tcp | TCP | none | Accepts, silent indefinitely, closes on any input (~5 ms); no protocol found |
+| 21586/tcp | TCP; application protocol unknown | unknown | Accepted connections stayed silent during the observed window; tested inputs caused closure; no handshake established |
 | 21587/tcp | Raw TCP (MessagePack) | **none** | Same event stream as 9002, server speaks first |
-| 50800/tcp | TCP (MDCIF) | — | Device-control server; **loopback-bound**, refused from LAN |
+| 50800/tcp | TCP (MDCIF) | unknown | Listener announced at boot; prior LAN attempts refused; binding and protocol unresolved |
 
 Also present but not network-reachable: the rear USB-B device port (composite
 HID + vendor-specific + printer class, inert during cloud-driven jobs) and the
-JRIP1 UART console (115200 8N1, TX-only on production units).
+JRIP1 UART output (115200 8N1; interactive receive/login not established on this unit).
 
 ### EWS — port 443 `[O]`
 
@@ -40,8 +42,8 @@ POST /webservices/password {password}
 GET  /webservices/wireless/{interface,networks,psk}
 ```
 
-Unknown paths fall through to the SPA shell — there is no hidden file or image
-endpoint. The endpoint surface does not change while a job runs.
+Tested unknown paths fell through to the SPA shell. No file/image retrieval
+endpoint was found in those tests; that is not an exhaustive proof none exists.
 
 ### Vision API — port 5000 `[O]`
 
@@ -63,21 +65,20 @@ dozen similar names returns `404` JSON.
 ### MDCIF — port 50800 `[O]`
 
 The boot console prints `MDCIF: ... Listening for TCP connection on port 50800`.
-Connections from the LAN are refused while every other listed port accepts, so
-the listener is bound to loopback or a container network. This is the process
-that owns the scan pipeline's image handles; reaching it requires code
-execution on the device.
+Prior LAN attempts were refused. Loopback/container binding, service state and
+filtering remain competing explanations; neither the binding nor ownership of
+image handles is established. The log proves TCP, not HTTP or a request format.
+Saved service/client definitions are needed before choosing a supported access path.
 
 ### Port 21586 — silent, input-rejecting `[O]`
 
 Accepts TCP and then says nothing: a connection held open for 15 s during an
-active scan received zero bytes. Any input closes it within ~5 ms — tested with
+active scan received zero bytes. The tested inputs closed it within ~5 ms — historical tests included
 every byte value `0x00`–`0x0f`, `A`–`Z`, `{}[]<>`, `0x7f`, `0xff`, plus HTTP
 requests, a TLS ClientHello, and MessagePack payloads. Multi-byte payloads that
 leave unread data in the socket produce a TCP reset rather than a clean FIN.
-UDP on the same port is silent. No handshake was found; the listener behaves
-like an internal consumer that drops foreign input rather than a service with a
-discoverable protocol.
+UDP on the same port is silent. No handshake was found. An internal consumer is a hypothesis, not an identified
+service or proof that all possible input is rejected.
 
 ## Event bus protocol — ports 9002 and 21587 `[O]`
 
@@ -134,7 +135,7 @@ A 60-second capture during a live run produced **494 messages across 25 sheets**
 345 of them and the WebSocket channel 149 — the WebSocket connection was opened
 later and missed the earlier frames.
 
-The `Image` node is the interesting one — it announces that pixels exist:
+The `Image` node announces image geometry and a handle; it does not return pixels:
 
 ```json
 {"composition": "Rgb24", "handle": 0,
@@ -146,17 +147,18 @@ The `Image` node is the interesting one — it announces that pixels exist:
 ```
 
 `handle` is `0` for the front side and `1` for the back. There is no path, URL,
-byte count, or payload — only geometry and a handle into the device's own image
-store.
+byte count, or payload — only geometry and a numeric handle. Its owning process, backing store and
+lifetime remain unverified.
 
-## Where the scan images actually live
+## Image geometry and retrieval evidence
 
-Three different resolutions exist at three different layers:
+The descriptors and downloaded thumbnails expose these geometries; the first
+two rows are metadata, not a verified read of the corresponding image bytes:
 
 | Layer | Size | Format | Reachable? |
 | --- | --- | --- | --- |
-| Sensor media window (in memory) | 1800 × 2020 @ 600 dpi | RGB24 | No — handle only |
-| Output canvas (JPEG-compressed) | 870 × 1170 @ 300 dpi | JPEG | No — handle only |
+| Advertised sensor media window | 1800 × 2020 @ 600 dpi | RGB24 | No — handle only |
+| Advertised output canvas | 870 × 1170 @ 300 dpi | JPEG | No — handle only |
 | Portal thumbnail (`imageUrl`) | 446 × 600 | JPEG | Yes — seller session |
 
 The portal's `thumb.jpg` is a ~0.5× downscale of the output canvas (aspect ratios
@@ -174,20 +176,22 @@ denied.
 
 ### Conclusion
 
-**No network surface returns scan image bytes.** The pixels exist on the device
-(behind an internal handle) and in vendor object storage (behind credentials),
-but every owner-reachable interface exposes metadata only:
+**No tested local endpoint returned full-resolution scan bytes.** Portal
+thumbnail export works. The available local interfaces expose metadata or
+consume supplied images; retained full-resolution data and its location remain
+unverified:
 
 - the event bus announces geometry and foil detection per page,
 - the Vision API consumes images but never serves them,
-- EWS has no file or image route,
-- MDCIF is loopback-bound,
-- USB is inert during jobs and UART is TX-only.
+- no EWS file/image retrieval route was found in the inspected surface,
+- MDCIF binding and image-retrieval capability remain unknown,
+- historical USB observations showed no job traffic; UART output did not establish interactive access.
 
-Getting full-resolution scans would require one of: code execution on the device
-to talk to MDCIF or read its image store; a trusted TLS position to capture the
-upload (the device trusts only Lexmark/Azure roots); or vendor storage
-credentials. None of those are available to an owner today.
+Next evidence should come from a supported diagnostic export, documented image
+API or explicitly authorized application mount/log access. The exact trust
+store, image ownership, persistence and supported full-resolution export route
+remain unresolved; prior certificate rejection does not establish the complete
+trust-store contents.
 
 ## What this means for exports
 

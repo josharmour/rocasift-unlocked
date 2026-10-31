@@ -33,4 +33,4 @@ The official [light guide](https://support.rocarobotics.com/hc/en-us/articles/47
 - Is a higher-resolution export available through a supported route?
 - Can vendor-provided firmware or documented hardware access support owner backups?
 
-No working firmware extraction, UART pinout, secure-boot bypass, or offline operation has been demonstrated here.
+Update October 30: JRIP1 UART output has been captured and fully annotated; interactive input/login remains unproved. No working firmware extraction or offline workflow is established. See the [complete diagnostic review](research/diagnostic-research-2026-10-30.md).

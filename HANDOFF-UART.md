@@ -1,5 +1,7 @@
 # UART SESSION HANDOFF — read me first (2026-10-24)
 
+> Superseded October 30: JRIP1 output was captured. See [the full UART review](docs/research/diagnostic-research-2026-10-30.md). The old JPRG1 hypotheses and suggested power cycles/key tests below are historical, not verified instructions for the current board. No U-Boot countdown or interactive receive path has been established.
+
 UPDATE 2026-10-28: hunt CLOSED — JPRG1 is not a debug UART. Adapter chain was
 proven good (loopback echo + GND-hold zeros); boot captures on pins 1/4/5 at
 115200/57600 all zero bytes; DMM survey shows pins 1,2,4,5 idle ~3.9 V, pin 6

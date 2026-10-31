@@ -1,12 +1,15 @@
 # sifter-export — an Optra Edge skill for owner-controlled data export
 
-A minimal ARM64 Docker skill for Optra Edge devices (Roca Sifter /
-Lexmark Optra Compute 550). Runs as a sandboxed container with
-file-system + removable-media privileges and exports chosen directories
-to an owner-controlled endpoint.
+An ARM64 Docker exporter prototype for Optra Edge devices (Roca Sifter /
+Lexmark Optra Compute 550). It is intended to export explicitly mounted
+directories to an owner-controlled endpoint.
 
-This is the vendor-sanctioned route to owner data access: no firmware
-modification, fully reversible, deployed through the Optra portal.
+**Installation and host-log access have not been demonstrated.** The sketch
+is not a vendor-approved diagnostic skill. Deployment permission, specific
+source mounts/API permissions and supported data delivery must be established.
+Named-volume or removable-media privileges alone do not grant access to other
+containers, the host journal or Docker logs. See the
+[diagnostic feasibility review](../../docs/research/diagnostic-research-2026-10-30.md).
 
 ## Files
 

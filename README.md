@@ -12,17 +12,21 @@ The long-term goal is owner-controlled scanning, access to our card images and d
 
 **This is an early research project. No firmware unlock or working third-party integration is available yet.** SortSwift, Card Dealer Pro, and TCGTracking are desired integration targets, not confirmed partners or supported integrations. This project is independent of Roca, Lexmark, and TCGplayer.
 
+## Latest diagnostic research
+
+[Complete UART analysis and diagnostic research](docs/research/diagnostic-research-2026-10-30.md) covers every saved boot line, log destinations, internal settings/services, missing-image recovery questions, and access prerequisites. The report distinguishes observations from hypotheses and corrects earlier claims about loopback binding, encryption and debug access.
+
 ## Headline findings (October 2026)
 
 Original research, first published here:
 
 - **Local card-recognition API discovered** (`docs/vision-api.md`): the device runs an unauthenticated FastAPI service on port 5000 — `POST /sifter/recognize_card` accepts a card image and returns full TCGplayer catalog identification (name, set, number, rarity, `tcgp_catalog_code`) **on-device in ~0.6 s**, no cloud or account required. Sessions can be initialized and reset locally (`/sifter/initialize`, `/sifter/reset`).
 - **Authenticated settings API mapped**: `GET /webservices/settings/all` exposes 121 device settings; `PUT /webservices/settings/` changes them (verified by toggling the hidden `SettingsPort8080` flag). Reveals an on-board Hailo AI accelerator, 4 GB RAM, TPM, eMMC health telemetry, and a custom firmware-pull URL setting.
-- **Failure mode diagnosed**: jobs that stall after 1–10 cards leave the device healthy but idle — instrumented timelines show no crash, no memory exhaustion, no network loss. The cloud orchestrator simply stops commanding the device while the portal reports "in progress."
+- **Job stalls instrumented**: sampled host telemetry remained responsive during some stalled jobs while the portal reported "in progress." The initiating cause remains unproved; acquisition, upload and cloud acknowledgements need correlation for the same scan.
 - **USB device port characterized** (`docs/usb-probe-runbook.md`): enumerates as a Lexmark composite device (vendor "Scan" interface + printer class + HID); no network gadget on current firmware; port is inert during jobs. Linux probe tooling included.
 - **Board surveyed** (`docs/research/BOARD-NOTES.md`): Lexmark P/N 10U9020 REV 4 mainboard, unpopulated 6-pin JPRG1 programming header (ground pin identified), Infineon TPM 2.0, test points — with photos.
 - **Encrypted log format documented** (`docs/log-format.md`): downloads are CMS-enveloped AES-256 bundles sealed to Lexmark support; structure verified across five samples.
-- **Platform research completed** (`docs/research/FINDINGS.md` §10e): the compute unit is Lexmark's granite2 family — Marvell Pegmatite SoC + WTM security processor owning secure boot and rootfs encryption. Public research (NCC Group, blasty/haxx.in) documents the console UART (JRIP1, 115200, RX disabled on production units), OTP-locked JTAG, flash layout, and working firmware-decryption tooling that turns a rooted device into a key oracle.
+- **Platform research reviewed**: this device reports an ARM64 `mv6270 Cobalt Edge` model, U-Boot 2022.01, Linux 6.12.54 and Lexmark Yocto. Related NCC Group and blasty research provides hypotheses; this unit's encryption, OTP/JTAG policy and UART receive path are not established by those studies. Its captured root mapping uses dm-verity/SquashFS.
 - **Live scan event bus decoded** (`docs/surfaces.md`): two unauthenticated MessagePack channels (ports 9002 and 21587) stream the scan pipeline's node graph in real time — per-page front/back state, foil detection, and the geometry of each captured image (1800×2020 @ 600 dpi in, 870×1170 @ 300 dpi JPEG out). The bus announces images but never carries their bytes.
 - **Device identity refined** (`docs/research/FINDINGS.md` §10f): machine type **8085-001** (unpublished OEM variant — public docs key to 8080), unit P/N 10U0900-003, radio = AzureWave AW-CM467 WiFi/BT5.0 module ("Contains FCC ID: TLZ-CM467").
 
@@ -36,11 +40,11 @@ Original research, first published here:
 | Local sift session control (initialize/reset) | ✅ working |
 | Diagnose job-stall failure mode | ✅ instrumented |
 | Map device settings & hidden services | ✅ done |
-| UART / console access | ✅ **found**: JRIP1 pin 2, 115200 8N1, TX-only — full boot log captured (`device/uart/boot-full-jrip1-pin2.log`); input disabled per platform design |
-| Motor/feed actuation control | 🔍 event bus decoded (9002/21587); 21586 silent; MDCIF control port 50800 is loopback-bound |
-| Full-resolution scan images | ❌ blocked: device holds 870×1170 JPEG (1800×2020 raw); portal serves 446×600 only — see `docs/surfaces.md` |
-| Owner skill container deployment | 📝 drafted (`skills/sifter-export/`) — now the primary access route |
-| Firmware extraction / root shell | 🔄 pivoted to software route: skill/EWS → rooted userland → blasty oracle tooling |
+| UART / console access | ✅ JRIP1 output captured at 115200 8N1; interactive input/login remains unproved. Complete saved-capture analysis is available. |
+| Motor/feed actuation control | 🔍 Event bus decoded (9002/21587); 21586 protocol unresolved; MDCIF announces TCP 50800, with binding/access unresolved. |
+| Full-resolution scan images | ⏳ Descriptors advertise larger geometry; no owner-readable full-resolution payload or retention policy demonstrated — see `docs/surfaces.md`. |
+| Owner skill container deployment | 📝 Prototype drafted (`skills/sifter-export/`); installation permission and diagnostic mounts/APIs remain unverified. |
+| Firmware extraction / root shell | ⏳ No working owner-accessible root shell or extraction route demonstrated. |
 | End-to-end third-party integration demo | ⏳ next |
 
 ## Research already collected

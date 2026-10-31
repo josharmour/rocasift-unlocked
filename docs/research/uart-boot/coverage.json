@@ -1,0 +1,269 @@
+{
+  "source_root": "device/uart",
+  "generated": "2026-10-31",
+  "line_rule": "LF-delimited physical lines; final LF does not create an extra empty line; CR/ANSI do not create new lines",
+  "source_files": [
+    {
+      "file": "boot-115200-jcft1-pin1.log",
+      "bytes": 0,
+      "physical_lines": 0,
+      "nonblank": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "kind": "UART text/test",
+      "covered": true
+    },
+    {
+      "file": "boot-115200-jrip1-pin1.log",
+      "bytes": 1,
+      "physical_lines": 1,
+      "nonblank": 1,
+      "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+      "kind": "UART text/test",
+      "covered": true
+    },
+    {
+      "file": "boot-115200-jrip1-pin2.log",
+      "bytes": 12151,
+      "physical_lines": 183,
+      "nonblank": 172,
+      "sha256": "3e4003a3ca42459f629b843e9c03d14e1c76c988b540b0b8690f9c6fa820776f",
+      "kind": "UART text/test",
+      "covered": true
+    },
+    {
+      "file": "boot-115200-pin4.log",
+      "bytes": 0,
+      "physical_lines": 0,
+      "nonblank": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "kind": "UART text/test",
+      "covered": true
+    },
+    {
+      "file": "boot-115200-pin5.log",
+      "bytes": 0,
+      "physical_lines": 0,
+      "nonblank": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "kind": "UART text/test",
+      "covered": true
+    },
+    {
+      "file": "boot-115200-pos3.log",
+      "bytes": 0,
+      "physical_lines": 0,
+      "nonblank": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "kind": "UART text/test",
+      "covered": true
+    },
+    {
+      "file": "boot-115200-pos6.log",
+      "bytes": 0,
+      "physical_lines": 0,
+      "nonblank": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "kind": "UART text/test",
+      "covered": true
+    },
+    {
+      "file": "boot-115200-r2.log",
+      "bytes": 0,
+      "physical_lines": 0,
+      "nonblank": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "kind": "UART text/test",
+      "covered": true
+    },
+    {
+      "file": "boot-115200-r3.log",
+      "bytes": 255731,
+      "physical_lines": 7,
+      "nonblank": 7,
+      "sha256": "a1176b452f59873ec7cf3fc3304df5d316616d792f6172ec820f2ef2e59aa630",
+      "kind": "UART text/test",
+      "covered": true
+    },
+    {
+      "file": "boot-115200-r4.log",
+      "bytes": 3,
+      "physical_lines": 1,
+      "nonblank": 1,
+      "sha256": "709e80c88487a2411e1ee4dfb9f22a861492d20c4765150c0c794abd70f8147c",
+      "kind": "UART text/test",
+      "covered": true
+    },
+    {
+      "file": "boot-115200.log",
+      "bytes": 0,
+      "physical_lines": 0,
+      "nonblank": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "kind": "UART text/test",
+      "covered": true
+    },
+    {
+      "file": "boot-57600-r2.log",
+      "bytes": 0,
+      "physical_lines": 0,
+      "nonblank": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "kind": "UART text/test",
+      "covered": true
+    },
+    {
+      "file": "boot-57600.log",
+      "bytes": 0,
+      "physical_lines": 0,
+      "nonblank": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "kind": "UART text/test",
+      "covered": true
+    },
+    {
+      "file": "boot-9600.log",
+      "bytes": 0,
+      "physical_lines": 0,
+      "nonblank": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "kind": "UART text/test",
+      "covered": true
+    },
+    {
+      "file": "boot-full-jrip1-pin2.log",
+      "bytes": 40648,
+      "physical_lines": 708,
+      "nonblank": 679,
+      "sha256": "864cdc575fd325c8dd15ee32f21eee74c69e13661e2a6a505aef589d8d7ce56d",
+      "kind": "UART text/test",
+      "covered": true
+    },
+    {
+      "file": "boot-jrip1-20261028T221520Z.json",
+      "bytes": 300,
+      "physical_lines": 11,
+      "nonblank": 11,
+      "sha256": "e807bd897d31b2431b363c4ec38e24531431f8b30af817b61e6d05af7eeb15ca",
+      "kind": "Capture metadata (not UART output)",
+      "covered": false
+    },
+    {
+      "file": "boot-jrip1-20261028T221520Z.log",
+      "bytes": 41751,
+      "physical_lines": 725,
+      "nonblank": 694,
+      "sha256": "51b7984aaa0bf781ce60988c398d71d93a2489fdf74530c9b0b2c8551e697eee",
+      "kind": "UART text/test",
+      "covered": true
+    },
+    {
+      "file": "ews-job-timeline.jsonl",
+      "bytes": 14267,
+      "physical_lines": 50,
+      "nonblank": 50,
+      "sha256": "8f8ae843ee8df14e342b3c73993f16d1ee111c6d054013cb0ed26159585ccd36",
+      "kind": "EWS telemetry (not UART output)",
+      "covered": false
+    },
+    {
+      "file": "job-watch-live-decoded.txt",
+      "bytes": 55777,
+      "physical_lines": 720,
+      "nonblank": 696,
+      "sha256": "3727fe849cf05e4fb051f2b219c94ac6e2cd486cea85bd94aca0e02e422afe41",
+      "kind": "Previously decoded derivative of timestamped UART capture",
+      "covered": true
+    },
+    {
+      "file": "job-watch-live.log",
+      "bytes": 97794,
+      "physical_lines": 978,
+      "nonblank": 978,
+      "sha256": "4ffd48214af72e4eb936876f718d96e03dd1fcbdbeb186ff9bc103e9d17608f4",
+      "kind": "Timestamped UART byte records",
+      "covered": true
+    },
+    {
+      "file": "loopback-test.log",
+      "bytes": 1,
+      "physical_lines": 1,
+      "nonblank": 1,
+      "sha256": "a8100ae6aa1940d0b663bb31cd466142ebbdbd5187131b92d93818987832eb89",
+      "kind": "UART text/test",
+      "covered": true
+    },
+    {
+      "file": "loopback-ts.log",
+      "bytes": 0,
+      "physical_lines": 0,
+      "nonblank": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "kind": "UART text/test",
+      "covered": true
+    },
+    {
+      "file": "loopback-ts2.log",
+      "bytes": 16,
+      "physical_lines": 1,
+      "nonblank": 1,
+      "sha256": "375df58306b77f3325c4b2e97e953dbf0a0c29566091c4316213d5d9a82bdd73",
+      "kind": "UART text/test",
+      "covered": true
+    },
+    {
+      "file": "loopback-ts3.log",
+      "bytes": 0,
+      "physical_lines": 0,
+      "nonblank": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "kind": "UART text/test",
+      "covered": true
+    },
+    {
+      "file": "passive-jrip1-20261028T221432Z.json",
+      "bytes": 321,
+      "physical_lines": 11,
+      "nonblank": 11,
+      "sha256": "d43b613c5ed91839a0898fda9699a013a18bd252da3a7febe3e7e7463a867f0a",
+      "kind": "Capture metadata (not UART output)",
+      "covered": false
+    },
+    {
+      "file": "passive-jrip1-20261028T221432Z.log",
+      "bytes": 0,
+      "physical_lines": 0,
+      "nonblank": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "kind": "UART text/test",
+      "covered": true
+    },
+    {
+      "file": "screen-before-restart-20261028.txt",
+      "bytes": 115990,
+      "physical_lines": 100055,
+      "nonblank": 339,
+      "sha256": "cb664bbbae4ea730b8f6140cedb0522dbfdceacc4ea15454e80f749304bb7590",
+      "kind": "Terminal scrollback: late startup, runtime cover events and orderly shutdown",
+      "covered": true
+    }
+  ],
+  "covered_source_lines": 103380,
+  "derived_reconstructed_lines": 732,
+  "display_entries": 4382,
+  "unreviewed": 0,
+  "source_integrity": "Original files read only; SHA-256 in inventory",
+  "redactions": [
+    "OS machine ID",
+    "MAC addresses if present",
+    "container and network-namespace IDs",
+    "Docker overlay layer identifiers",
+    "credential-like values if present"
+  ],
+  "tests": [
+    "Every covered source has contiguous 1..N line mappings",
+    "Every raw UART byte record maps to reconstructed message lines",
+    "Byte masking preserves length and record boundaries",
+    "No unresolved annotation remains",
+    "Only adjacent identical redacted text/annotations collapse into display ranges"
+  ]
+}
