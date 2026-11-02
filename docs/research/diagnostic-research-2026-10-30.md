@@ -1,6 +1,6 @@
 # Internal diagnostics, settings and UART research
 
-Consolidated October 30, 2026 (America/Los_Angeles; captures/report also use October 31 UTC). This note records the investigation's results and unresolved prerequisites. `[O]` means observed in saved evidence, `[I]` means an inference, and **unverified** means no supporting implementation or successful test was established. It supersedes stronger claims in earlier notes where identified below.
+Consolidated October 30, 2026 (America/Los_Angeles; captures/report also use October 31 UTC). This note records the investigation's results and unresolved prerequisites. `[O]` means observed in saved evidence, `[I]` means an inference, and **unverified** means no supporting implementation or successful test was established.
 
 Follow-up: [Device internals, image lifecycle and logging map](device-internals-2026-10-31.md) consolidates the process/IPC map, settings-consumer status, four image states, log destinations and three next experiments.
 
@@ -92,7 +92,7 @@ The existing [exporter](../../skills/sifter-export/README.md) is a draft, not a 
 
 ## How related published research helps
 
-Earlier local notes cite NCC Group's Lexmark MC3224i firmware-extraction study and blasty's 2024 Lexmark/WTM research. Those studies concern related products/builds and can suggest source-search terms, firmware stages and logging architecture. They do not establish this ARM64 OEM unit's pinout, voltage, OTP state, encryption policy, exploitable vulnerability or working recovery procedure. Earlier categorical README claims transferred those properties too far.
+NCC Group's Lexmark MC3224i firmware-extraction study and blasty's 2024 Lexmark/WTM research concern related products/builds and suggest source-search terms, firmware stages and logging architecture. They do not establish this ARM64 OEM unit's pinout, voltage, OTP state, encryption policy, exploitable vulnerability or working recovery procedure.
 
 The exact chip and board/build match must precede any model-specific conclusion. No exploit, key-oracle operation, credential extraction, firmware modification or invasive storage operation was performed as part of the boot analysis.
 

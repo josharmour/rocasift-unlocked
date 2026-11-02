@@ -4,7 +4,7 @@ Collected October 24, 2026. [O] denotes a recorded observation; [I] denotes an i
 
 ## Platform and management
 
-[O] The device's setup interface identifies a Lexmark Optra Compute 550 platform. The inspected device reported firmware `3.5.4` and build target `granite2v8-sifter`. Exact SoC, board pinout, and debug access remain unverified.
+[O] The device's setup interface identifies a Lexmark Optra Compute 550 platform (`granite2v8-sifter`, firmware `3.5.4`, machine type `8085-001`, mainboard `10U9020 REV 4` with a Marvell 88PA6270 "Pegmatite" ARMv8-A SoC, 4 GB DDR4 RAM, and 16 GB Kioxia eMMC; see [BOARD-NOTES.md](research/BOARD-NOTES.md)).
 
 [O] The local HTTPS setup interface uses device-password authentication. Observed management routes include settings, encrypted support logs, external diagnostic URLs, and proxy configuration. Downloaded support logs were encrypted; local plaintext decoding was not demonstrated.
 

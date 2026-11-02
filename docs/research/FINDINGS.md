@@ -1,4 +1,4 @@
-> Public copy of the original local findings, with owner/device identifiers removed and selected overstatements corrected. Captures and vendor PDFs referenced below are retained locally, not included here. These are research observations, not an independently validated API specification. See [current device findings](../device-findings.md) for proxy cleanup and later observations.
+> Public copy of the local findings, with owner/device identifiers removed. Captures and vendor PDFs referenced below are retained locally, not included here. These are research observations, not an independently validated API specification. See [current device findings](../device-findings.md) for proxy cleanup and later observations.
 
 # Roca Sifter — Recon Findings
 Collected 2026-10-24 by Hermes (session: roca firmware/RE investigation).
@@ -10,8 +10,8 @@ Observations are marked [O]; inferences are marked [I].
 |---|---|---|
 | Product | Roca Sifter (TCGplayer card sifter) | [O] |
 | Maker | Roca Robotics Inc. (TCGplayer/Lexmark subsidiary) | [O] T&C pdf |
-| Platform | Lexmark **Optra Compute 550** white-label | [O] device serves /device-models/compute550.png; cert O=Lexmark |
-| CPU / RAM / storage | Quad-core ARM v8 / 2GB / 16GB eMMC | [O] optra-spec-sheet.pdf |
+| Platform | Lexmark **Optra Compute 550** white-label (Machine type `8085-001`, unit P/N `10U0900-003`, mainboard `10U9020 REV 4`) | [O] device serves /device-models/compute550.png; cert O=Lexmark; chassis & PCB labels |
+| CPU / RAM / storage | Marvell 88PA6270 ("Pegmatite") Quad-core ARMv8-A / 4 GB DDR4 (`4× Nanya NT5AD1024M8C3-HR`) / 16 GB Kioxia eMMC 5.1 (`THGAMVG7T13BAIL`) | [O] board photos + UART boot log |
 | OS | Poky Linux (Yocto), secure boot, Azure IoT Edge runtime, Docker "skills" | [O] spec sheet |
 | Serial | <DEVICE_SERIAL> | [O] cloud + device |
 | Azure identity | thingName sifter-<DEVICE_SERIAL>, DPS scope <DPS_SCOPE> | [O] |
@@ -128,11 +128,17 @@ Full details in [BOARD-NOTES.md](BOARD-NOTES.md). Summary:
 - Network surface: only 80/443 open; no PJL/IPP/LPD/SSH; unknown HTTP paths
   hit the SPA catch-all. Attack surface is the authenticated
   `/webservices/*` API.
-- Mainboard photographed: Lexmark P/N 10U9020 REV 4. Unpopulated 6-pin
-  **JPRG1** programming header (prime UART/JTAG candidate), pad strip near
-  JRESET, test points, Infineon SLB9672 TPM 2.0 (signed boot chain expected),
-  SoC under heatsink, Nuvoton flash packages, coin cell, WiFi module with
-  U.FL (FCC ID pending).
+- Mainboard photographed: **Lexmark P/N `10U9020 REV 4` (`YYZ00C`)**. Key ICs:
+  Marvell 88PA6270 ("Pegmatite") quad-core ARMv8-A SoC (`16_U1` under heatsink),
+  4 GB DDR4 SDRAM (`4× Nanya NT5AD1024M8C3-HR`, `16_U2`–`16_U5`), 16 GB Kioxia
+  eMMC 5.1 (`THGAMVG7T13BAIL`, `16_U6`), Infineon `SLB9672` TPM 2.0 (`U3`),
+  Marvell `88EC068-NNB2` Gigabit Ethernet PHY (`19_U1`), AzureWave `AW-CM467`
+  Wi-Fi 5 / BT 5.0 module (`36_U5`, FCC ID `TLZ-CM467`), TI `TLV320DAC3100`
+  audio DAC (`U1`), ST `24C04WP` I²C EEPROM (`U101`), `MDC1103S` reset
+  supervisor (`21_U2`), TI `TPS56637` (`27_U1`) and `TPS65266` (`23_U1`) buck
+  converters, rechargeable RTC coin cell (`B1`), 4-pin `JRIP1` UART console
+  header (pin 2 TX @ 115200 8N1, pin 4 GND), and unpopulated 6-pin `21_JPRG1`
+  programming header.
 
 ## 10. Routes to firmware bits (remaining)
 
@@ -191,7 +197,7 @@ Note: Roca T&C contains a software reverse-engineering restriction clause.
 
 The [October 30 diagnostic research](diagnostic-research-2026-10-30.md) includes
 the complete per-line boot report, settings/service map, access prerequisites,
-USB/reset questions and corrections to earlier platform extrapolations.
+and USB/reset analysis.
 It covers 103,380 original physical lines, with exact duplicate-range mappings
 and 732 reconstructed UART lines. Most source lines are blank scrollback.
 Raw captures remain private under `device/`; only redacted derivatives are published.

@@ -9,8 +9,7 @@ saved artifacts, `[I]` an inference.
 
 Companion documents: [the UART/diagnostic review](diagnostic-research-2026-10-30.md),
 [the surface inventory](../surfaces.md), [the encrypted log format](../log-format.md)
-and the local `FINDINGS.md`. Where those documents disagree with this note, the
-saved artifact cited here wins; several earlier claims are qualified below.
+and the local `FINDINGS.md`.
 
 Framing: support registration is fixed and images now reach the cloud, so upload
 success is **not** the success criterion here. The goal is owner-controlled
@@ -74,22 +73,6 @@ needing a fresh version check before replication.
 | Logging destinations | systemd journal sockets plus a “System Logging Service” at boot, LBTRACE vendor driver, pstore/ramoops crash records copied to syslog, encrypted EWS log bundle addressed to Lexmark support, a reachable remote Sematext endpoint, Docker/IoT Edge logs unread. | Destinations partly observed; contents unavailable |
 | Settings consumers | Values are known from the 121-key dump (`SettingsDebugLevel=5`, `WebBrowser=true`, `WebBrowserURL=""`); readers/writers and runtime effects are not in saved source or logs. `web_url` is absent from the dump; `u8NVSMembersDataFilledIn ver 4` is absent from the EWS dump and appears as an internal MDCIF/NVS field. | Values observed; consumers unresolved |
 | Supported local access | Authenticated EWS settings/log export, Vision API self-documentation, event-bus metadata subscription. No host shell, plaintext journal, container filesystem or full-resolution image route was demonstrated. | Observed limits |
-
-## Corrections to earlier claims
-
-- TCP 21587 does not emit an unsolicited banner; an idle receive-only probe got
-  zero bytes, so output is activity-dependent.
-- TCP 50800 is proven TCP by the MDCIF listener line; HTTP and loopback binding
-  are not proven.
-- dm-verity provides integrity verification, not encryption.
-- UART output is not an interactive shell; no getty/login prompt was established.
-- Linux USB/HID support does not prove U-Boot keyboard input.
-- Image descriptors and handles are metadata and slot indices, not durable
-  storage or proof of a successful upload.
-- Startup queue-prune, PWM-fallback and TPM warnings are not by themselves a
-  diagnosis of a specific scan outcome.
-- Related Lexmark research does not establish this board's pinout, fuse layout or
-  vulnerabilities.
 
 ## Artifact audit: service definitions, executable references, settings consumers
 
@@ -193,7 +176,7 @@ The names suggest roles — `LxkScanDataRemote` for scan-data transport,
 client, message schema or handle mapping was captured. Treat those role
 assignments as hypotheses, not documented interfaces.
 
-Corrections that matter:
+Interpretation boundaries:
 
 - A listening TCP port is not evidence of HTTP. MDCIF prints a TCP listener;
   no request format or HTTP response has been observed (`docs/surfaces.md:65-71`).

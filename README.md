@@ -14,7 +14,7 @@ The long-term goal is owner-controlled scanning, access to our card images and d
 
 ## Latest diagnostic research
 
-[Complete UART analysis and diagnostic research](docs/research/diagnostic-research-2026-10-30.md) covers every saved boot line, log destinations, internal settings/services, image-lifecycle questions, and access prerequisites. The report distinguishes observations from hypotheses and corrects earlier claims about loopback binding, encryption and debug access.
+[Complete UART analysis and diagnostic research](docs/research/diagnostic-research-2026-10-30.md) covers every saved boot line, log destinations, internal settings/services, image-lifecycle questions, and access prerequisites.
 
 Registration support was subsequently fixed and images now reach the cloud. Upload success is therefore no longer the research criterion: the goal is owner-controlled visibility into the device's processes, logging, settings consumers and image pipeline.
 
@@ -26,7 +26,7 @@ Original research, first published here:
 - **Authenticated settings API mapped**: `GET /webservices/settings/all` exposes 121 device settings; `PUT /webservices/settings/` changes them (verified by toggling the hidden `SettingsPort8080` flag). Reveals an on-board Hailo AI accelerator, 4 GB RAM, TPM, eMMC health telemetry, and a custom firmware-pull URL setting.
 - **Scan pipeline instrumented**: the event bus exposes per-side state, counters and image descriptors, and host telemetry stayed responsive during observed jobs. The bus does not carry image bytes or upload acknowledgements, so byte-level ownership, persistence and release remain unresolved.
 - **USB device port characterized** (`docs/usb-probe-runbook.md`): enumerates as a Lexmark composite device (vendor "Scan" interface + printer class + HID); no network gadget on current firmware; port is inert during jobs. Linux probe tooling included.
-- **Board surveyed** (`docs/research/BOARD-NOTES.md`): Lexmark P/N 10U9020 REV 4 mainboard, unpopulated 6-pin JPRG1 programming header (ground pin identified), Infineon TPM 2.0, test points — with photos.
+- **Board surveyed & chip inventory completed** (`docs/research/BOARD-NOTES.md`): Lexmark P/N `10U9020 REV 4` (`YYZ00C`) mainboard with Marvell 88PA6270 ("Pegmatite") quad-core ARMv8-A SoC, 4 GB Nanya DDR4 RAM (`4× NT5AD1024M8C3-HR`), 16 GB Kioxia eMMC 5.1 (`THGAMVG7T13BAIL`), Infineon `SLB9672` TPM 2.0, Marvell `88EC068-NNB2` GbE PHY, AzureWave `AW-CM467` Wi-Fi/BT module, TI `TLV320DAC3100` audio DAC, TI `TPS56637`/`TPS65266` buck converters, and 4-pin `JRIP1` console UART header — with photos.
 - **Encrypted log format documented** (`docs/log-format.md`): downloads are CMS-enveloped AES-256 bundles sealed to Lexmark support; structure verified across five samples.
 - **Platform research reviewed**: this device reports an ARM64 `mv6270 Cobalt Edge` model, U-Boot 2022.01, Linux 6.12.54 (later captures 6.12.90) and Lexmark Yocto. Related NCC Group and blasty research provides hypotheses; this unit's encryption, OTP/JTAG policy and UART receive path are not established by those studies. Its captured root mapping uses dm-verity/SquashFS.
 - **Live scan event bus decoded** (`docs/surfaces.md`): two unauthenticated MessagePack channels (ports 9002 and 21587) stream the scan pipeline's node graph in real time — per-page front/back state, foil detection, and the geometry of each captured image (1800×2020 @ 600 dpi in, 870×1170 @ 300 dpi JPEG out). The bus announces images but never carries their bytes.

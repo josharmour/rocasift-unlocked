@@ -1,166 +1,111 @@
-# Roca Sifter — Ports, Connectivity, and Board Research
+# Roca Sifter — Ports, Connectivity, and Board Hardware Survey
 
-Reviewed October 24, 2026. [O] = observed on the owner's device; [D] = documented for the Optra platform; [I] = inference or proposed test. Original local notes are preserved separately.
+Reviewed November 1, 2026. `[O]` = observed on the owner's device (photos in [images/board/](images/board/), UART boot log, or EWS settings dump); `[D]` = documented for the Optra platform; `[I]` = inference.
 
-## What we know about this unit
+## 1. Platform & Board Identity
 
-[O] The setup interface identifies the Compute 550 platform and reports firmware `3.5.4`, build target `granite2v8-sifter`. Wi-Fi and Ethernet configuration pages are present. During the latest inspection, Wi-Fi was connected and Ethernet was disconnected. The proxy address and port were empty.
+- **Platform:** OEM variant of the **Lexmark Optra Compute 550** (`granite2v8-sifter`, firmware `3.5.4`) `[O]`.
+- **Unit Label:** Machine type **`8085-001`**, assembly P/N **`10U0900-003`** `[O]` (retail Optra Compute 500/550 manuals cover machine type `8080`).
+- **Mainboard PCB:** **Lexmark P/N `10U9020 REV 4`, EC `6147431`, `YYZ00C`** ([IMG_0017.jpg](images/board/IMG_0017.jpg), [IMG_0027.jpg](images/board/IMG_0027.jpg)) `[O]`.
+- **Wireless Modular Approval:** `"Contains FCC ID: TLZ-CM467"` / `"Contains IC: 6100A-CM467"` (AzureWave `AW-CM467` 802.11ac + BT 5.0 module) `[O]`.
 
-[I] This supports a Compute 550 relationship, but does not establish that every connector, PCB revision, or internal cable matches a retail Compute 550. We have not completed a physical board survey.
+## 2. Rear Panel Connectors ([IMG_0014.jpg](images/board/IMG_0014.jpg), [IMG_0015.jpg](images/board/IMG_0015.jpg), [IMG_0028.jpg](images/board/IMG_0028.jpg))
 
-## External connectors: documented reference
+From left to right across the rear panel bracket:
 
-The retained Compute guide, pages 5–6, numbers the following parts. Compare these labels with photographs of the actual unit before attaching cables.
-
-| Diagram number | Documented part | Role and research value |
+| Silkscreen | Connector | Observed Role |
 | --- | --- | --- |
-| 1 | Power button | Controls power; not a communications interface. |
-| 2 | Setup button | Enrollment/reset functions depend on model and firmware. Avoid using it as an exploratory diagnostic control. |
-| 3 | Headphones jack | Audio output. The previous notes incorrectly called this a ground stud. |
-| 4 | USB host port | Accepts supported peripherals such as storage or a MarkNet network adapter. It does not imply that a laptop can access device storage. |
-| 5 | Ethernet | Connects the device to a LAN. Useful for separating Wi-Fi problems from job/service failures. |
-| 6 | USB device port | Connects to a computer for the embedded setup web server. Both USB ports were observed on the Sifter's rear panel (2026-10-27); which connector is host vs device is not yet confirmed by plugging in. |
-| 7 | Ethernet LEDs | Left indicates link, right indicates activity. Activity alone does not establish successful cloud processing. |
-| 8 | Power socket | Power input, not a data interface. Verify actual power hardware on the Sifter. |
+| `JLVPS1` | Barrel jack | DC power input `[O]` |
+| `SW1` | Pushbutton | Rear tactile switch `[O]` |
+| `19_J1` | RJ-45 (`PRA1T844-6/6`) | Gigabit Ethernet with link (left) and activity (right) LEDs `[O]` |
+| `JRUSB1` | USB Type-A (Host) | USB 2.0 host port for flash storage or peripherals `[O]` |
+| `JUSBD1` | USB Type-B (Device) | Enumerates on a host computer as `043d:0122` ("Lexmark xxxx", USB 2.0 High-Speed composite device) `[O]` |
 
-[D] The older Compute guide gives `169.254.76.86` as the browser address over USB and recommends Windows 10. This is a candidate test address, not an address observed on our Sifter. macOS compatibility and USB networking driver/class remain untested.
+## 3. Mainboard Chip Inventory (`P/N 10U9020 REV 4`)
 
-Do not select a USB-B or USB-C cable merely from earlier prose. Identify the physical connector first. Documentation for other Optra models includes different connectors and must not be applied to the Compute 550 without checking the model heading.
+### Core Compute, Memory & Storage (Sheet 16)
 
-## Three different kinds of access
+| Silkscreen | Package & Exact Marking | Component Identity | Role | Photo Reference |
+| --- | --- | --- | --- | --- |
+| **`16_U1`** | BGA under black finned heatsink (clipped to `16_HOOK1` / `16_HOOK2`) | **Marvell 88PA6270 ("Pegmatite" / Granite2) Quad-Core ARMv8-A SoC** | 4× ARM Cortex-A53 cores (`0x410fd032`, 64-bit `aarch64`), integrated Marvell WTM security co-processor, `mv61x0-vdma` virtual DMA, dual CIS scanner interface, motor PWM controllers, SDHCI (`mmc0`–`mmc2`), dual EHCI USB 2.0 hosts, USB device controller (`d4224000.usb3dev`), and Synopsys `DWMAC1000` Ethernet MAC `[O]`. | [IMG_0017.jpg](images/board/IMG_0017.jpg), [IMG_0021.jpg](images/board/IMG_0021.jpg) |
+| **`16_U2`<br>`16_U3`<br>`16_U4`<br>`16_U5`** | 4× 78-ball FBGA<br>`NANYA 2534`<br>`NT5AD1024M8C3-HR`<br>`449355R1EV L TW` | **4× Nanya 8 Gbit (1 GB) DDR4-2666 SDRAM** (`1024M × 8-bit`) | **4 GB System RAM.** Four 8-bit wide chips in a vertical column left of the SoC form a 32-bit (`4x8`) DDR4 bus initialized at `DDR4 800MHz 4x8 8Gbit (10U9010)` (`3847976K/4194304K` available in Linux) `[O]`. | [IMG_0017.jpg](images/board/IMG_0017.jpg), [IMG_0028.jpg](images/board/IMG_0028.jpg) |
+| **`16_U6`** | 153-ball WFBGA (rotated 45° above heatsink)<br>`25449AE`<br>`THGAMVG7T13BAIL`<br>`JC8693 TAIWAN` | **Kioxia (Toshiba) `THGAMVG7T13BAIL` 16 GB eMMC 5.1 NAND Flash** | **Primary Non-Volatile Storage (`mmcblk1`, 14.5 GiB usable).** Holds 8 GPT partitions (`p1`–`p8`), including U-Boot environment, CRAMFS FIT kernel+DTB bundles, `dm-verity` SquashFS rootfs (`mmcblk1p3`), persistent `/var` (`data`), and `f2fs` Docker container storage `[O]`. | [IMG_0017.jpg](images/board/IMG_0017.jpg), [IMG_0024.jpg](images/board/IMG_0024.jpg) |
 
-```mermaid
-flowchart LR
-    PC[Owner computer] -->|LAN: observed setup web interface| EWS[Device management]
-    PC -.->|USB device port: documented, untested on Sifter| EWS
-    S[Sifter runtime] -->|Network connections| C[Cloud services]
-    P[Scanner, sensors, motors] -.->|Internal wiring and protocols unknown| S
-```
+### Security, Configuration & RTC
 
-- **Management access:** network settings, proxy configuration, passwords, and encrypted log downloads. The local web interface already provides this.
-- **Job/data access:** starting jobs, fetching images, identification results, and bin assignments. Our working export observations concern the authenticated cloud account.
-- **Hardware access:** the interfaces between compute, scanner, motors, and sensors. We have not identified their buses or commands.
+| Silkscreen | Package & Exact Marking | Component Identity | Role | Photo Reference |
+| --- | --- | --- | --- | --- |
+| **`U3`** | PG-VQFN-32<br>`Infineon`<br>`SLB9672`<br>`VU20 25`<br>`JCH2609` | **Infineon OPTIGA™ TPM `SLB9672VU20` (TPM 2.0)** | **Hardware Root of Trust.** Connected over SPI (`pxa2xx-spi d4036000.spi`, driver `slb9670@0`). Provides hardware key storage (`TPM_EK`) for `aziot-tpmd` and `tpm2-abrmd` (Azure IoT Edge DPS identity) `[O]`. | [IMG_0022.jpg](images/board/IMG_0022.jpg), [IMG_0030.jpg](images/board/IMG_0030.jpg) |
+| **`U2`** | SOT-23-5 (above `U3`)<br>`C07G` | **Single-Gate Logic Buffer** (TI `SN74LVC1G07`-class open-drain buffer) | Conditions the active-low GPIO reset signal (`slb9670@0 enforce active low on GPIO handle`) to the Infineon TPM `U3` `[O/I]`. | [IMG_0022.jpg](images/board/IMG_0022.jpg) |
+| **`U101`** | SOIC-8 (above `JSPD1`)<br>`ST` logo<br>`24C04WP`<br>`K523T` | **STMicroelectronics `M24C04-WMN6TP` 4-Kbit (512-Byte) I²C Serial EEPROM** | Board/configuration non-volatile memory on I²C `[O]`. | [IMG_0022.jpg](images/board/IMG_0022.jpg), [IMG_0030.jpg](images/board/IMG_0030.jpg) |
+| **`B1`** | Coin cell (`MS621FE` with welded tabs) | **Rechargeable Lithium RTC Battery** | Backup power for the SoC's real-time clock (`rtc-pegmatite d0626800.rtc`) `[O]`. | [IMG_0027.jpg](images/board/IMG_0027.jpg), [IMG_0028.jpg](images/board/IMG_0028.jpg) |
 
-[I] USB may provide another path to the management interface. It does not, by itself, demonstrate a scanner interface, shell, serial console, mass-storage export, or independent job control.
+### Networking & Wireless Connectivity (Sheets 19 & 36)
 
-## Board survey (October 27, 2026) — first internal photos
+| Silkscreen | Package & Exact Marking | Component Identity | Role | Photo Reference |
+| --- | --- | --- | --- | --- |
+| **`19_U1`** | QFN-48 (below RJ-45 jack)<br>`MARVELL`<br>`88EC068-NNB2`<br>`NE4F055.18JW`<br>`2604 A0S SG` | **Marvell `88EC068-NNB2` Gigabit Ethernet PHY** (with 25.000 MHz crystal `19_Y1`) | Wired LAN transceiver interfacing the SoC's Synopsys `DWMAC1000` MAC (`stmmaceth d0700000.stmmac`) to the RJ-45 port `[O]`. | [IMG_0028.jpg](images/board/IMG_0028.jpg) |
+| **`36_U5`** | Shielded RF LGA module (bottom-right, next to U.FL `36_J1`) | **AzureWave `AW-CM467` Wi-Fi 5 (802.11ac) + Bluetooth 5.0 Module** (FCC ID `TLZ-CM467`) | Connected via SDIO (`mmc2`); provides `mlan0` (Wi-Fi client) and `uap0` (`172.16.131.2` setup hotspot) via yellow coaxial antenna pigtail on `36_J1` `[O]`. | [IMG_0017.jpg](images/board/IMG_0017.jpg), [IMG_0022.jpg](images/board/IMG_0022.jpg), [IMG_0030.jpg](images/board/IMG_0030.jpg) |
 
-[O] The owner opened the enclosure and photographed the mainboard. Board
-identity silkscreen: **Lexmark P/N 10U9020 REV 4, EC 6147431, YYZ00C**.
-Annotated photos: [images/board/](images/board/) (IMG_0017 full board;
-IMG_0021–0030 close-ups). Photos with the unit serial label visible are kept
-local and not published.
+### Audio, System Reset & Protection (Sheet 21 & Base)
 
-Key observations:
+| Silkscreen | Package & Exact Marking | Component Identity | Role | Photo Reference |
+| --- | --- | --- | --- | --- |
+| **`U1`** | VQFN-32 (left of `B1`)<br>`DAC3100`<br>`TI 57I`<br>`A4ZJ G4` | **Texas Instruments `TLV320DAC3100`** Low-Power Stereo Audio DAC with Class-D Speaker Amplifier | Drives startup/shutdown chimes (`Optra Power Up Sound`, `powerdown-sound.service`) and audio alerts to the speaker on `JLED-BTNS-SCANDR-SPKR` `[O/I]`. | [IMG_0027.jpg](images/board/IMG_0027.jpg), [IMG_0028.jpg](images/board/IMG_0028.jpg) |
+| **`21_U2`** | TSSOP-16 (left of `21_JPRG1`)<br>`53CCKQW D`<br>`MDC1103S` | **System Supervisor / Reset & Programming Controller** (`MDC1103S`) | Positioned between `JRESET1`, RTC battery `B1`, and the 6-pin `21_JPRG1` header; manages board reset sequencing and factory programming lines `[O/I]`. | [IMG_0027.jpg](images/board/IMG_0027.jpg), [IMG_0031.jpg](images/board/IMG_0031.jpg) |
+| **`U7`** | SOT-23-6 (next to USB fuse `F2` `E200`) | **USB ESD Protection / VBUS Switch** | Protects the rear USB ports (`JRUSB1` / `JUSBD1`) `[O/I]`. | [IMG_0017.jpg](images/board/IMG_0017.jpg) |
+| **`44_U2`<br>`45_U2`** | 2× 6-pin DFN (next to fuse `F1` `305V`)<br>`64YDKB` | **Peripheral Rail Load Switches / Protection ICs** | Power/signal protection adjacent to 30V polyfuse `F1` and `JFAN1` `[O/I]`. | [IMG_0025.jpg](images/board/IMG_0025.jpg), [IMG_0026.jpg](images/board/IMG_0026.jpg) |
+| **`42_U2`<br>`53_U2`** | 2× DFN/SON (near `SW1` and `F8`) | **TVS / ESD Diode Arrays** | Electrostatic discharge clamping for rear panel switch `SW1` and Ethernet port `[O/I]`. | [IMG_0028.jpg](images/board/IMG_0028.jpg) |
 
-- **`21_JPRG1`** [O]: an unpopulated 6-pin header, pin 1 marked with "1"
-  (IMG_0027; close-up IMG_0031). Single vertical row, pin 1 = top hole
-  (silkscreen "1" + chamfered outline corner). All six nets route as fine
-  (~5 mil) signal traces into a common fan-out heading toward the SoC area —
-  consistent with a JTAG/programming bus (TCK/TMS/TDI/TDO/reset class).
-  No series components inline near the header. No TX/RX/GND legend is
-  silkscreened, so the pinout is untraced. Primary UART/JTAG candidate.
-  No public documentation exists for P/N 10U9020 or JPRG1 (searched
-  2026-10-27) — pinout must be derived from the board.
-- **JPRG1 pinout progress (2026-10-27)** [O]: owner multimeter continuity
-  against chassis ground identified **pin 3 (third from pin 1 / the triangle
-  marker) as ground**. Remaining pins uncharacterized; oscilloscope boot
-  probing pending. Owner has soldered a pin header onto JPRG1 for reliable
-  connections (2026-10-27) — scope probing confirmed the line idles at
-  3.3V TTL (safe for direct USB-TTL adapter, no level shifter needed).
-- A second unpopulated single-row pad strip sits near the **JRESET**
-  silkscreen (IMG_0017) — secondary candidate.
-- **`JCFT1`** [O]: unpopulated 4-hole pad row near `JSPD1` and the RF area
-  (IMG_0028/0030). Hypotheses [I], ranked: (1) CompactFlash/memory-card
-  interface — Lexmark print boards historically carry CF for fonts/storage,
-  and a working card slot would be an owner-controlled export path;
-  (2) wireless-card option header (adjacent to WiFi module / U.FL);
-  (3) factory bed-of-nails test points. Identification: continuity-map the
-  four pins during the JPRG1 session — ground/3.3V membership plus whether
-  pins ring to the SPI flash bus (storage) or the RF can (wireless).
-- Test points TP19, TP20, TP45A, 52_TP1 [O].
-- **Infineon SLB9672 TPM 2.0** [O] (IMG_0022): a discrete TPM is present,
-  consistent with a signed/verified boot chain. Owners should expect secure
-  boot on this platform.
-- Main SoC sits under a black finned heatsink; markings not yet read [O].
-- Four Nuvoton-marked flash/memory packages left of center [O].
-- Coin cell (RTC backup) confirmed on board [O].
-- Wi-Fi module: shielded can with U.FL antenna pigtail; FCC ID not yet read
-  (needs a close-up) [O].
-- A Freescale/NXP Kinetis-class MCU (45° rotated, near `HOOK7`) is likely the
-  engine/panel controller, separate from the main SoC [I].
-- Populated connectors: JLVPS3 (power in), JRUSB1/JUSBD1 (USB), JSPD1, JFAN1,
-  16_J1 (FRONT/OPTION panel header), SW1 [O].
+### Power Management & DC-DC Regulators (Sheets 23, 24, 26, 27)
 
-[I] The presence of an unpopulated programming header and labeled test points
-suggests factory debug access was part of the Lexmark design. Identifying the
-JPRG1 pinout (trace-following or continuity testing with power off) is the
-next hardware step toward a serial console.
+| Silkscreen | Package & Exact Marking | Component Identity | Role | Photo Reference |
+| --- | --- | --- | --- | --- |
+| **`27_U1`** | WSON-10 (top-left, next to `3R3` inductor `27_L1`)<br>`T56637`<br>`TI 58I`<br>`C5CV` | **Texas Instruments `TPS56637`** 28V, 6A Synchronous Buck Converter | Primary step-down converter from DC input jack `JLVPS1` `[O/I]`. | [IMG_0028.jpg](images/board/IMG_0028.jpg) |
+| **`23_U1`** | QFN-24 (bottom-right, with inductors `150`, `4R7`, `3R3`)<br>`TPS`<br>`65266`<br>`TI 58I`<br>`A08P G4` | **Texas Instruments `TPS65266`** Triple Synchronous Step-Down Buck Converter | Generates three low-voltage system rails (`23_L1` `3.3 µH`, `23_L2` `15 µH`, `23_L3` `4.7 µH`) for DDR4, logic, and Wi-Fi `[O/I]`. | [IMG_0017.jpg](images/board/IMG_0017.jpg) |
+| **`26_U1`** | SOT-23-6 (below `1R0` inductor `26_L1`) | **Synchronous Buck Regulator** | High-current core supply (`~1.05V` AVS) below the SoC heatsink `[O/I]`. | [IMG_0017.jpg](images/board/IMG_0017.jpg), [IMG_0021.jpg](images/board/IMG_0021.jpg) |
+| **`24_U2`<br>`24_U1`** | DFN-8 (`1206 / 5C8 / CXQ1`) & WSON-8 (`SL0`) around `24_L1` | **Auxiliary Switching Regulator & LDO** | Point-of-load supplies below the DDR4 column `[O/I]`. | [IMG_0025.jpg](images/board/IMG_0025.jpg) |
 
-## USB device port: observed behavior (October 27, 2026)
+### Unpopulated IC Footprints (DNI on `10U9020 REV 4`)
 
-[O] Plugged into a computer, the rear USB-B port enumerates as a Lexmark
-composite USB device (VID `043D`, PID `0122`, USB 2.0 High-Speed) with three
-interfaces: HID, a vendor-specific interface whose string is **"Scan"**
-(bulk OUT `0x02` / IN `0x82`), and a bidirectional USB printer class
-interface ("Print"). No CDC network gadget appears: the documented
-"EWS over USB at 169.254.76.86" behavior is absent on firmware 3.5.4.
+- **`38_U1` ([IMG_0023.jpg](images/board/IMG_0023.jpg)) & `52_U1` ([IMG_0026.jpg](images/board/IMG_0026.jpg)):** Unpopulated 24-pin TSSOP motor-driver footprints with exposed thermal pads and 8 large current-sense resistor pads each `[O]`.
+- **`50_U1` & `51_U1` ([IMG_0028.jpg](images/board/IMG_0028.jpg)):** Unpopulated 16-pin QFN DC-DC regulator footprints on the left power section `[O]`.
+- **`16_U8` ([IMG_0028.jpg](images/board/IMG_0028.jpg)):** Unpopulated 8-pin SOIC/WSON SPI flash footprint above `16_U2` `[O]`.
 
-[O] Extensive passive captures on Linux (usbmon + interface claims, idle and
-during a live sift job) recorded **zero device-originated USB traffic** — the
-port is inert during normal cloud-driven operation. Raw `/dev/usb/lp0` writes
-are accepted. Probe tooling and methodology: see the repository's USB probe
-runbook (`docs/usb-probe-runbook.md` in the working copy).
+---
 
-[I] Getting data over USB will require actively driving the vendor protocol
-on the "Scan" interface's bulk OUT endpoint; passive listening is exhausted.
+## 4. Debug Headers, Harnesses & Peripherals
 
-## Network surface (October 27, 2026)
+### Console & Programming Headers
+- **`JRIP1` (Verified Serial Console):** 4-pin vertical connector right of the SoC heatsink ([IMG_0017.jpg](images/board/IMG_0017.jpg)) `[O]`.
+  - **Pin 2:** UART0 TX (`ttyS0` @ `0xd4030000`, **115200 8N1**, 3.3V TTL) — outputs full Boot ROM, U-Boot 2022.01, Linux kernel, systemd, and `MDCIF` runtime messages `[O]`.
+  - **Pin 4:** Ground (continuity-verified to chassis) `[O]`.
+  - **Input:** TX-only console; RX input is disabled on production hardware and no `getty` runs on `ttyS0` `[O]`.
+- **`21_JPRG1`:** Unpopulated 6-pin vertical through-hole header ([IMG_0027.jpg](images/board/IMG_0027.jpg), [IMG_0031.jpg](images/board/IMG_0031.jpg)) next to supervisor `21_U2`. Position 2 (counting from pin 1) is GND; positions 3 and 6 idle at ~3.6V (factory programming bus, not async UART) `[O]`.
+- **`JCFT1`:** Unpopulated 4-pin through-hole header near `JSPD1` ([IMG_0022.jpg](images/board/IMG_0022.jpg), [IMG_0030.jpg](images/board/IMG_0030.jpg)). Pin 1 acts as a reset line `[O]`.
+- **`JRESET1`:** Populated 2-pin jumper header left of `21_U2` ([IMG_0027.jpg](images/board/IMG_0027.jpg)) `[O]`.
+- **`JSEC1`:** Populated 2-pin jumper with yellow cap directly below the SoC heatsink ([IMG_0021.jpg](images/board/IMG_0021.jpg)) `[O]`.
 
-[O] Port scan of the unit found only 80/443 open — no PJL (9100), IPP (631),
-LPD (515), SSH, or telnet. Unknown HTTP paths return the SPA catch-all
-(index.html), so no print-heritage CGI endpoints were found. The network
-attack surface is the authenticated `/webservices/*` API only.
+### Scanner & Sensor Harnesses
+- **Top edge:** Two 30-pin FFC ribbon connectors (front and back CIS contact image sensor bars) and `JLED-LEAD-EDGE` (6-pin harness) ([IMG_0017.jpg](images/board/IMG_0017.jpg), [IMG_0024.jpg](images/board/IMG_0024.jpg)) `[O]`.
+- **Left edge:** `JPKFD1` (6-pin harness), `JLED-BTNS-SCANDR-SPKR` (11-pin harness for LEDs, buttons, scanner drive, speaker), and `JLDROP-RHOME1-RHOME2` (6-pin harness at bottom-left) ([IMG_0017.jpg](images/board/IMG_0017.jpg)) `[O]`.
+- **Right edge:** `JFOIL-PRST-FR_DOOR_SW` (7-pin harness for foil detector, paper-present sensor, front-door interlock switch), `JRDROP-LHOME1-LHOME2-TE1` (9-pin harness for drop/home/trailing-edge optical sensors), and `JSPD1` (3-pin header) ([IMG_0017.jpg](images/board/IMG_0017.jpg), [IMG_0023.jpg](images/board/IMG_0023.jpg)) `[O]`.
+- **Bottom edge:** `JFAN1` (unpopulated 2-pin fan header) and 4-pin power/interlock harness next to fuse `F5` ([IMG_0017.jpg](images/board/IMG_0017.jpg), [IMG_0026.jpg](images/board/IMG_0026.jpg)) `[O]`.
+- **Center (`16_J1`):** Unpopulated 20-pin fine-pitch `FRONT / OPTION` connector ([IMG_0024.jpg](images/board/IMG_0024.jpg)) `[O]`.
 
-## Next experiment: identify USB behavior
+---
 
-1. Finish the current job before changing cabling. Photograph accessible connectors and labels, keeping serial numbers private.
-2. Identify the device-role port. Use a matching data-capable cable; do not connect two USB host ports with an ordinary A-to-A cable.
-3. On the Mac, record USB and network interfaces before connection:
+## 5. USB Device Port (`JUSBD1`) & Network Surface
 
-   ```sh
-   system_profiler SPUSBDataType
-   networksetup -listallhardwareports
-   ifconfig -a
-   ```
+- **USB Device Port (`043d:0122`):** Plugged into a host computer, the rear USB-B port enumerates as a Lexmark USB 2.0 High-Speed composite device with three interfaces:
+  - Interface 0 (`ff/ff/ff`, string `"Scan"`): bulk OUT `0x02` / bulk IN `0x82` (512-byte packets) `[O]`.
+  - Interface 1 (`07/01/02`, string `"Print"`): bidirectional printer class, bulk OUT `0x01` / bulk IN `0x81` `[O]`.
+  - Interface 2 (`03/00/00`): HID interrupt IN `0x83` `[O]`.
+  - No CDC/RNDIS network gadget is exposed on firmware `3.5.4`, and passive `usbmon` captures during idle and live sift jobs recorded zero device-originated USB transfers (`docs/usb-probe-runbook.md`) `[O]`.
+- **LAN Surface:** Open TCP ports are `80` (redirects to `443`), `443` (authenticated EWS), `5000` (unauthenticated FastAPI Sifter Vision API), `9002` (WebSocket MessagePack event bus), `21586` (silent TCP listener), and `21587` (raw TCP MessagePack event bus); `50800` (`MDCIF`) is announced on the boot console but refuses LAN connections (`docs/surfaces.md`) `[O]`.
 
-4. Attach only the documented device port and repeat those read-only commands. Compare newly appearing device names, vendor/product IDs, interface classes, and network interfaces. Redact serial numbers and MAC addresses before sharing output.
-5. If a new network interface appears, inspect its address and route. Try the documented `169.254.76.86` setup address without changing the Mac's default route or existing device settings. If it does not work, record the result rather than forcing network changes.
-6. Compare the resulting web interface with the LAN interface. Log any difference in visible features. Do not assume access to additional services.
+## Sources and Evidence
+- Board photographs: [images/board/](images/board/) (`IMG_0014.jpg`–`IMG_0031.jpg`).
+- UART boot analysis: [diagnostic-research-2026-10-30.md](diagnostic-research-2026-10-30.md) and [device-internals-2026-10-31.md](device-internals-2026-10-31.md).
+- [Device observations](../device-findings.md), [surface inventory](../surfaces.md), and [log envelope findings](../log-format.md).
 
-Success means a reproducible connection method and identified USB function. No enumeration could instead mean the wrong port, a charge-only cable, missing driver support, or different OEM firmware; it does not prove the port is disabled.
-
-## Internal research, after external identification
-
-The valuable question for platform independence is how the compute unit exchanges images and commands with the scanner and motion hardware. A cable map would help establish whether those components are standard peripherals or need custom drivers.
-
-Start with photos of accessible labels and cable routing. Record board revision and component markings only when safely accessible. Opening the electronics/power enclosure is a separate servicing step; the old notes are not verified disassembly instructions.
-
-UART, JTAG, storage type/package, exact SoC, and internal USB links remain unverified. Do not infer a UART voltage, baud rate, or pin order from another Lexmark product. A headphone jack is not evidence of a serial console. Absence of debug connectors in a consumer diagram does not prove none exist internally.
-
-A wireless-module FCC ID may lead to regulatory documentation, but it may describe only the radio module, and internal photos may be unavailable or confidential. Record the exact label before searching.
-
-## Corrections to earlier notes
-
-- Removed the ground-stud identification and the claim that the USB device port is the narrow slot.
-- Removed the assumption that Wi-Fi must be built into the main board: standard Compute documentation describes a USB MarkNet adapter; the Sifter implementation is unverified.
-- Removed guaranteed UART/eMMC access and unsupported pinout claims.
-- Do not reuse generic Optra setup-button timing for the Roca enclosure. Consult the Roca-specific guide; the older and newer Optra manuals differ.
-- The card-handling hardware matters: understanding its connection to compute is essential for independent scanning and sorting.
-
-## Sources and evidence
-
-- Retained local `reference/optra-compute-ug.pdf`, pages 5–6 and 8–11: connector diagram, USB setup address, and network requirements. Not redistributed.
-- [Lexmark Optra guide, August 2026](https://support.lexmark.com/content/dam/support/collateral/lexmark_solutions/optra/ug/Optra-User-s-Guide_en.pdf), Compute 500/550 section, pages 8–9: corroborates connector roles. Other model sections are not interchangeable.
-- [Roca buttons, lights, and sounds](https://support.rocarobotics.com/hc/en-us/articles/47929740990733-Roca-Sifter-Buttons-Lights-and-Sounds): use for the Sifter's external controls.
-- [Device observations](../device-findings.md) and [log envelope findings](../log-format.md): local management access does not currently provide plaintext support logs.
