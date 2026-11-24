@@ -960,3 +960,23 @@ access or a trusted CA on device (TLS rejects non-Lexmark CAs).
 The sync fired exactly once, at network reconfiguration — not at boot, not
 periodically. Re-triggerable in principle by toggling the device proxy
 off/on; each toggle costs a ~60 s web-service bounce.
+
+## 16. Scan-image upload destination + job-pause behavior (2026-11-24)
+
+Two observations from a live job day:
+
+**Scan images upload to TCGplayer's own S3 bucket** — during active scanning
+the proxy CONNECT log recorded TLS connections to
+`tcgplayer-ims-image-upload-bucket-prd-us-east-1.s3.us-east-1.amazonaws.com`.
+This confirms scan imagery leaves the device for AWS us-east-1 during jobs,
+over a path that honors the device-wide HTTP proxy setting (i.e. the web
+service stack, not IoT Edge). Only two connections for ~30 scanned cards ⇒
+connection reuse or batched uploads.
+
+**Jobs pause and resume without owner input, device stays healthy** — a job
+resumed on its own after hours idle, scanned ~30 cards, then paused again;
+throughout both states the device reported hub-connected / online /
+firmware-ready via its local status API. Vendor support history for this
+product line indicates stall/pause symptoms of this shape originate in the
+backend job orchestration (recognition counters advancing while results fail
+to persist), not in device or LAN faults.
