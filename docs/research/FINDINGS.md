@@ -233,3 +233,76 @@ Sources: `https://docs.optra.com/devices/overview/`, `enroll-device/`, `maintena
 - `[O]` Diff against Oct 28–31 baseline captures (`docs/research/uart-boot/annotations.json`): `[  OK  ] Started Set Wifi Region Code.` appears (with `WPA supplicant` on `mlan0`), whereas the October captures started `Wifi Host AP Mgr.` instead. The four `mlock_shared_object` warnings (`libc`, `libpthread`, `libm`, `libdl`) remain unchanged.
 - `[I]` `Set Wifi Region Code` vs. `Wifi Host AP Mgr.` likely reflects active Wi-Fi client (STA) mode vs. AP provisioning mode, or an intervening firmware update; correlate against the unit's current `FirmwareVersion`.
 
+## 14. Boot network capture & settings survey (2026-11-24)
+
+### Method: gateway-side capture
+
+Captured from the LAN gateway (UniFi OS, SSH root) with `tcpdump` — no agent
+or configuration change on the device itself. Hardware-offload caveat: the
+gateway ASIC switches established flows past the CPU, so only NEW flows are
+visible; a controlled reboot (every flow new) yields the complete picture.
+Three captures ran pre-reboot: a DNS text log, `conntrack -E -e NEW` events,
+and a full pcap, copied off-box for parsing. The pcap uses SLL2 linktype
+(a 20-byte header precedes each frame); DNS QNAME/CNAME chains extract
+cleanly in ~40 lines of pure Python (struct + name-pointer decompression) —
+`strings(1)` will NOT find TLS SNI.
+
+### What a clean boot actually does `[O]`
+
+| Phase | Destination |
+|---|---|
+| DHCP | LAN gateway |
+| NTP | `time3.google.com` |
+| Connectivity check | `www.microsoft.com` via Akamai (`e13678.dscb.akamaiedge.net`) |
+| Name browsing | LLMNR multicast `224.0.0.252:5355` |
+| Control plane | **persistent TLS/MQTT to `optra-release.azure-devices.net`** (Azure IoT Hub, eastus) |
+
+**A clean boot performs NO firmware check at all** — zero packets to
+`bucket.optra.com`, no SWUpdate CDN traffic, and no hit on an armed
+`Pull_FW_URL` proxy across two boots and a setup-button press.
+
+Conclusion `[I → effectively O]`: updates are **cloud-pushed** over the IoT
+Hub connection (device twin desired properties / direct methods); the device
+only pulls bytes when the cloud tells it to. This retroactively explains
+every prior negative result: reboot wipes `Pull_FW_URL` before any local
+check could use it, the setup button does not trigger a pull, and no hidden
+EWS update endpoint exists — the trigger was never local.
+
+Practical consequence: the `Pull_FW_URL` redirect is a **passive stakeout**.
+A pass-through proxy on a LAN workstation forwards every request unchanged to
+`https://bucket.optra.com` and logs method/path/headers/upstream status as
+JSON lines; it was verified end-to-end with a real `403` passthrough from the
+bucket. Firmware bytes are never fabricated by the listener — real
+pass-through or nothing, so a genuine OTA still succeeds.
+
+### Settings survey — full 121-key live dump `[O]`
+
+Re-dumped `/webservices/settings/all` post-boot (fw 3.5.7):
+
+- **No update-channel / maintenance-window / update-policy key exists** in the
+  settings surface → that configuration lives entirely cloud-side (IoT twin),
+  corroborating the capture conclusion above.
+- `FirmwareStatus` is an enum (`Ready (0)`) — expect Downloading/Installing
+  states during a real OTA; poll it during the stakeout.
+- `IotedgeVersion` is reported separately from `FirmwareVersion`.
+- The device exposes its Azure DPS `ScopeId` and a hashed `MachineID` via
+  settings (tenant identifiers — deliberately not reproduced here).
+- **New lever — device-wide HTTP proxy**: `ProxyScheme`, `ProxyAddress`,
+  `ProxyPort`, `ProxyUsername`, `ProxyPassword` keys exist and are writable
+  via the settings API (all empty/default from the factory). Pointing the
+  device at a local pass-through proxy would expose every outbound hostname
+  via CONNECT headers (TLS content stays pinned to Lexmark/Azure CAs —
+  observation only, no MITM). Untested; strongest next experiment for
+  endpoint visibility beyond boot. Same restore-original-value discipline as
+  `Pull_FW_URL`.
+- The full key list is archived privately (it contains credential hashes and
+  identifiers and is not published).
+
+### Stakeout state at close of session
+
+- Device online, fw 3.5.7, `FirmwareStatus Ready`, `ConnectedToHub True`.
+- `Pull_FW_URL` re-armed to the pass-through proxy post-boot (reboot wipes it;
+  original value is the empty string — restore with
+  PUT `{"Pull_FW_URL": ""}` when the experiment ends).
+- Proxy live; gateway watchers (DNS log + full pcap) still running.
+
