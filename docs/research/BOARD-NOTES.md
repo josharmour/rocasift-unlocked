@@ -81,10 +81,11 @@ From left to right across the rear panel bracket:
 ![Debug and console header close-ups](images/board/debug-headers-closeup-annotated.png)
 
 ### Console & Programming Headers
-- **`JRIP1` (Verified Serial Console):** 4-pin vertical connector right of the SoC heatsink ([IMG_0017.jpg](images/board/IMG_0017.jpg)) `[O]`.
+- **`JRIP1` (Verified Serial Console):** 4-pin vertical **JST PH (2.00 mm pitch)** shrouded header (`B4B-PH-K-S` / TE HPI-2 `440054-4` compatible; mates with `PHR-4` plug) right of the SoC heatsink ([IMG_0017.jpg](images/board/IMG_0017.jpg), [jrip1-macro-front.jpg](images/board/jrip1-macro-front.jpg), [jrip1-macro-pins.jpg](images/board/jrip1-macro-pins.jpg), [jrip1-macro-context.jpg](images/board/jrip1-macro-context.jpg)) `[O/I]`.
+  - **Mechanical specs:** `2.00 mm` pitch, `0.50 mm` square tin-plated posts, `~3.4 mm` exposed pin depth inside a `~6.0 mm` shroud (`~4.5 mm` pocket depth). No silkscreen `1` marker is printed on the outline — verify Pin 4 (`GND`) continuity to chassis before wiring `[O]`.
   - **Pin 2:** UART0 TX (`ttyS0` @ `0xd4030000`, **115200 8N1**, 3.3V TTL) — outputs full Boot ROM, U-Boot 2022.01, Linux kernel, systemd, and `MDCIF` runtime messages `[O]`.
   - **Pin 4:** Ground (continuity-verified to chassis) `[O]`.
-  - **Input:** TX-only console; RX input is disabled on production hardware and no `getty` runs on `ttyS0` `[O]`.
+  - **Input & adjacent passives (2026-11-23):** TX-only console; RX input is disabled on production hardware and no `getty` runs on `ttyS0` `[O]`. Macro inspection shows `R659` (`0 Ω`, populated) connected to the outer pin and all 9 inline 0201 footprints directly beneath `JRIP1` (`R598`, `R596`, `R597`, `R594`, plus five components feeding `TP458`–`TP461`) populated `[O]`, suggesting RX disablement is more likely gated in SoC OTP/e-fuses, bootloader/DTB policy, or an open link elsewhere rather than a missing immediate series resistor `[I]`.
 - **`21_JPRG1`:** Unpopulated 6-pin vertical through-hole header ([IMG_0027.jpg](images/board/IMG_0027.jpg), [IMG_0031.jpg](images/board/IMG_0031.jpg)) next to supervisor `21_U2`. Position 2 (counting from pin 1) is GND; positions 3 and 6 idle at ~3.6V (factory programming bus, not async UART) `[O]`.
 - **`JCFT1`:** Unpopulated 4-pin through-hole header near `JSPD1` ([IMG_0022.jpg](images/board/IMG_0022.jpg), [IMG_0030.jpg](images/board/IMG_0030.jpg)). Pin 1 acts as a reset line `[O]`.
 - **`JRESET1`:** Populated 2-pin jumper header left of `21_U2` ([IMG_0027.jpg](images/board/IMG_0027.jpg)) `[O]`.
@@ -109,7 +110,8 @@ From left to right across the rear panel bracket:
 - **LAN Surface:** Open TCP ports are `80` (redirects to `443`), `443` (authenticated EWS), `5000` (unauthenticated FastAPI Sifter Vision API), `9002` (WebSocket MessagePack event bus), `21586` (silent TCP listener), and `21587` (raw TCP MessagePack event bus); `50800` (`MDCIF`) is announced on the boot console but refuses LAN connections (`docs/surfaces.md`) `[O]`.
 
 ## Sources and Evidence
-- Board photographs: [images/board/](images/board/) (`IMG_0014.jpg`–`IMG_0031.jpg`).
+- Board photographs: [images/board/](images/board/) (`IMG_0014.jpg`–`IMG_0031.jpg`, `jrip1-macro-*.jpg`, and derived annotated diagrams).
 - UART boot analysis: [diagnostic-research-2026-10-30.md](diagnostic-research-2026-10-30.md) and [device-internals-2026-10-31.md](device-internals-2026-10-31.md).
 - [Device observations](../device-findings.md), [surface inventory](../surfaces.md), and [log envelope findings](../log-format.md).
+
 
