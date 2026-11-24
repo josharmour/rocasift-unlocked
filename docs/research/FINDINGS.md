@@ -86,6 +86,7 @@ NO remote device-log/diagnostics endpoints on ql-api (404s). [O]
 | Endpoint | Purpose | Access |
 |---|---|---|
 | portal.optra.com | Lexmark Optra Portal (device mgmt) | auth required; GraphQL API host injected post-login; CF blocks anon POST |
+| docs.optra.com | Optra Edge Portal documentation (devices, skills, workflows, admin) [O 2026-11-23] | public |
 | optra-release.azure-devices.net | Azure IoT Hub | device-only |
 | global.azure-devices-provisioning.net | Azure DPS | device-only |
 | optrarelease.azurecr.io | Azure Container Registry (skill images) | anon pull DISABLED (401 even per-repo) |
@@ -204,3 +205,31 @@ Raw captures remain private under `device/`; only redacted derivatives are publi
 
 Details, reproduction steps, and the full port table: [`docs/surfaces.md`](../surfaces.md).
 Capture tool: [`tools/bus-probe.py`](../../tools/bus-probe.py).
+
+## 13. Optra Edge Portal docs & 2026-11-23 UART boot diff (2026-11-23)
+
+### Optra Edge Portal documentation (`docs.optra.com`)
+
+Sources: `https://docs.optra.com/devices/overview/`, `enroll-device/`, `maintenance-window/`, `troubleshooting/`, `skills/overview/`, `skills/add-skill/`, `skills/privileges/`, `skills/inputs-and-outputs/` (copyright 2026 Lexmark Ventures LLC).
+
+- **Firmware updates & recovery gap `[O]`:** Firmware delivery is documented strictly as portal-managed OTA — either triggered manually from the device detail view or applied automatically during 2-hour organization/device Maintenance Windows (firmware update first, then skill sync). Two channels exist: `stable` (all organizations) and `early` (requires an org-level feature flag). `Troubleshooting Devices` lists no downloadable `.swu` package, offline/USB recovery path, or engineering/debug image program; failed updates only instruct retrying from the portal and checking `Device Logs`.
+- **Enrollment & tenant lock-in `[O]`:** Standard Optra devices use a 13-character serial starting with `8080` and require pressing the physical setup button (5–7 minute enrollment window) while claiming the device at `portal.optra.com`. Attempting to enroll an already-claimed device returns `"Device is not claimable"`, confirming OEM units enrolled under Roca/TCGplayer's tenant cannot be self-enrolled into another Optra Portal organization unless unenrolled `[I]`.
+- **Portal EWS tunnel & Skill Web UI `[O]`:** The portal's EWS button opens a secure reverse tunnel to the device's on-board EWS that expires after 1 hour. Skill `Web UI` binds `{exposedPort}/tcp` (optionally `HostIp: 127.0.0.1`) and proxies browser access through the portal.
+- **Skill container runtime & Docker `HostConfig` mechanics `[O]`:**
+  - `Docker Image` skills (Docker Hub, Azure ACR, or private registry; AWS ECR unsupported) support the full privilege set; `Docker Compose` skills (`.tgz` uploaded in the portal) support **only** `Env` and `Web UI`.
+  - Skills join the `azure-iot-edge` Docker network (`NetworkingConfig.EndpointsConfig['azure-iot-edge'].Aliases`).
+  - `Port Bindings` explicitly forbid host ports **`22, 53, 80, 443, and 8080`** (matching the on-device EWS / `SettingsPort8080` ports).
+  - `Removable Media` mounts `/run/removable_media:/media:shared` (correlates with the `Auto Config & Mount extended storage` systemd unit `[I]`).
+  - `Volumes` create named Docker volumes (`type: volume`, alphanumeric name, optional `size`); `Tmpfs` and `SHM Size` map to Docker `type: tmpfs` and `HostConfig.ShmSize`.
+  - `Host Networking` (`NetworkMode: host`) and `NET_ADMIN` (`CapAdd: ["NET_ADMIN"]`) require org-level feature flags from Optra support.
+  - Hardware privileges documented: `Sound` (`/etc/asound.conf:ro`, `/dev:/dev:ro`, `/dev/snd`, `c 116:* rmw`), `Connected Cameras` (`c 81:* rmw`), `USB Serial Converters` (`c 166/167/188/189:* rmw`), plus model-gated privileges for Vision/CX2000 devices (`GPIOs`, `HDMI`, `IR`, `Host Video Libraries`, `LED Control`).
+  - Skill inputs are pushed via Azure IoT module twin desired settings; outputs are emitted as JSON over Azure IoT messages.
+  - Full privilege-to-`HostConfig` summary for the exporter draft: [`skills/sifter-export/PRIVILEGES.md`](../../skills/sifter-export/PRIVILEGES.md).
+- **Public prior-art sweep `[O]`:** Searches across `support.lexmark.com`, `docs.optra.com`, `support.rocarobotics.com`, GitHub, Reddit, and hardware teardown sites found no public Optra Compute 550 / Roca Sifter firmware packages, debug builds, or third-party hardware teardowns outside this repository.
+
+### 2026-11-23 `JRIP1` UART boot capture diff
+
+- `[O]` Clean systemd boot capture from `JRIP1` Pin 2 (`ttyS0`, 115200 8N1) reaches `Multi-User System`, starts `MDCIF` (listening on TCP `50800` at ~9.37 s), `Optra Edge Device UI Service`, `com.optra.DeviceUI` D-Bus proxy, `SWUpdate`, `TPM2`, `Edge Manager` / `Edge IoT` / `Edge Device Web Services`, `containerd`, `Docker`, `Azure IoT Edge daemon`, and its first `libcontainer` instance.
+- `[O]` Diff against Oct 28–31 baseline captures (`docs/research/uart-boot/annotations.json`): `[  OK  ] Started Set Wifi Region Code.` appears (with `WPA supplicant` on `mlan0`), whereas the October captures started `Wifi Host AP Mgr.` instead. The four `mlock_shared_object` warnings (`libc`, `libpthread`, `libm`, `libdl`) remain unchanged.
+- `[I]` `Set Wifi Region Code` vs. `Wifi Host AP Mgr.` likely reflects active Wi-Fi client (STA) mode vs. AP provisioning mode, or an intervening firmware update; correlate against the unit's current `FirmwareVersion`.
+
