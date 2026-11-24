@@ -76,6 +76,10 @@ From left to right across the rear panel bracket:
 
 ## 4. Debug Headers, Harnesses & Peripherals
 
+![Mainboard 10U9020 REV 4 debug headers and key silicon](images/board/board-debug-headers-annotated.png)
+
+![Debug and console header close-ups](images/board/debug-headers-closeup-annotated.png)
+
 ### Console & Programming Headers
 - **`JRIP1` (Verified Serial Console):** 4-pin vertical connector right of the SoC heatsink ([IMG_0017.jpg](images/board/IMG_0017.jpg)) `[O]`.
   - **Pin 2:** UART0 TX (`ttyS0` @ `0xd4030000`, **115200 8N1**, 3.3V TTL) — outputs full Boot ROM, U-Boot 2022.01, Linux kernel, systemd, and `MDCIF` runtime messages `[O]`.

@@ -15,3 +15,8 @@ Consolidated 2026-10-30. Full boot-line analysis: [docs/research/diagnostic-rese
 - **`21_JPRG1` (6-pin unpopulated header near `21_U2`):** Factory programming bus (position 2 = GND; positions 3 and 6 idle at ~3.6 V; zero async UART bytes during boot).
 - **`JCFT1` (4-pin unpopulated header near `JSPD1`):** Pin 1 is a hardware reset line, not a serial console.
 
+## Annotated Board & Pinout Diagrams
+
+![Mainboard 10U9020 REV 4 debug headers and key silicon](docs/research/images/board/board-debug-headers-annotated.png)
+
+![Debug and console header close-ups](docs/research/images/board/debug-headers-closeup-annotated.png)
