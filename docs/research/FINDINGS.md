@@ -306,3 +306,35 @@ Re-dumped `/webservices/settings/all` post-boot (fw 3.5.7):
   PUT `{"Pull_FW_URL": ""}` when the experiment ends).
 - Proxy live; gateway watchers (DNS log + full pcap) still running.
 
+### Addendum: device-wide HTTP proxy — CONFIRMED LIVE (2026-11-24, same night)
+
+PUT `ProxyAddress` / `ProxyPort` via the settings API took effect
+**immediately — no reboot**. Sequence observed:
+
+1. The device's web service bounced for ~60 s after the PUT (ports refused,
+   then briefly timing out) — benign, self-recovered.
+2. Within 90 s the device tunneled through the proxy:
+   `CONNECT www.microsoft.com:443` (connectivity check) and
+   `CONNECT optra-release.azure-devices.net:443` ×3 (control-plane re-dials).
+3. Device stayed healthy throughout: `NetworkOnline true`,
+   `ConnectedToHub true`, `FirmwareStatus Ready`.
+
+Result: **every outbound hostname the device dials is now observable live**
+via CONNECT log lines, while TLS content stays end-to-end (CA-pinned, no
+MITM). The IoT Hub control plane honors the device-wide proxy — so when Roca
+cloud-pushes an OTA, the firmware CDN hostname appears in the CONNECT log
+even before any byte is pulled.
+
+Deployment hardening: the proxy was promoted from an ad-hoc process to a
+supervised systemd unit (`Restart=always`), since the device's entire cloud
+path now depends on it.
+
+The overnight stakeout now has three independent tripwires:
+
+1. `Pull_FW_URL` redirect proxy → exact object path of the pull.
+2. Forward-proxy CONNECT log → every hostname dialed, including the CDN.
+3. Gateway pcap/DNS/conntrack watchers → ground truth even if proxies die.
+
+Restore procedure when done: PUT `{"ProxyAddress": "", "ProxyPort": ""}`
+(factory defaults), verify readback + `ConnectedToHub true`.
+
